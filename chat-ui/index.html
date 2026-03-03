@@ -477,7 +477,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    max-width: 520px;
+    max-width: 560px;
     margin: 0 auto;
   }
   .welcome .suggestion {
@@ -570,6 +570,12 @@ const FRIENDLY_TOOL_NAMES = {
   'get_health_document_link':     ['Getting document link...', 'Link ready'],
   'ui_chip_list_card':            ['Preparing quick actions...', 'Actions ready'],
   'render_card':                  ['Rendering results...', 'Results ready'],
+  'search_conversation_attachments': ['Searching conversation attachments...', 'Attachments found'],
+  'get_attachment_link':          ['Getting attachment link...', 'Link ready'],
+  'messaging_mcp_search_conversation_attachments': ['Searching conversation attachments...', 'Attachments found'],
+  'messaging_mcp_get_attachment_link': ['Getting attachment link...', 'Link ready'],
+  'messaging_mcp_render_chips':  ['Preparing quick actions...', 'Actions ready'],
+  'messaging_mcp_render_card':   ['Rendering results...', 'Results ready'],
 };
 
 const chat = document.getElementById('chat');
@@ -674,7 +680,7 @@ async function send(retryText) {
       headers: {
         'Authorization': 'Bearer ' + jwt,
         'Content-Type': 'application/json',
-        'User-Agent': 'ChatUI',
+        'User-Agent': 'Local-CLI',
         'X-Skip-Guardrails': 'true'
       },
       body: JSON.stringify({ id: crypto.randomUUID(), session_id: sessionId, message: text })

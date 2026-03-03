@@ -6,6 +6,7 @@ SERVICES_DIR="$HOME/GoProjects/services"
 AOR_DIR="$HOME/GoProjects/agent-orchestrator"
 MOCK_DIR="$SCRIPT_DIR/demo-mock-server"
 MCP_DIR="$SERVICES_DIR/src/el/apps/connected_care/local_mcp_server"
+MSG_MCP_DIR="$SERVICES_DIR/src/el/apps/messaging/local_mcp_server"
 CHAT_UI_DIR="$SCRIPT_DIR/chat-ui"
 VENV="$AOR_DIR/.hackathon-venv"
 
@@ -53,7 +54,18 @@ else
   echo "[OK] MCP server started"
 fi
 
-# 3. AOR containers
+# 3. Messaging MCP server
+if lsof -ti :18005 > /dev/null 2>&1; then
+  echo "[OK] Messaging MCP server already running on :18005"
+else
+  echo "[..] Starting Messaging MCP server on :18005..."
+  (cd "$MSG_MCP_DIR" && CGO_ENABLED=0 go build -o local-messaging-mcp . && ./local-messaging-mcp) &
+  PIDS_TO_KILL+=($!)
+  sleep 2
+  echo "[OK] Messaging MCP server started"
+fi
+
+# 4. AOR containers (renumbered)
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q agent-orchestrator-agent-orchestrator; then
   echo "[OK] AOR containers already running"
 else
@@ -76,7 +88,7 @@ else
   exit 1
 fi
 
-# 4. Chat UI
+# 5. Chat UI
 if lsof -ti :8093 > /dev/null 2>&1; then
   echo "[OK] Chat UI already running on :8093"
 else
