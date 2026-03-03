@@ -158,17 +158,18 @@ flowchart LR
 
     META -->|"Agent summarizes"| USER[User]
     LINK -->|"User clicks"| USER
-    CONTENT -.->|"NEVER sent to Gemini"| LLM[LLM]
+    CONTENT -.->|"ONLY with user consent\n(Tier 3)"| LLM[LLM]
 
-    style CONTENT fill:#ff6666,color:#000
-    style LLM fill:#ff6666,color:#000
+    style CONTENT fill:#ff9800,color:#000
+    style LLM fill:#ff9800,color:#000
 ```
 
-**Rule: tools return metadata + download links, never raw document content.**
+**Default rule: tools return metadata + download links, not raw content.**
 
-- No PHI/PII sent to the LLM
-- No document bytes pass through the agent
-- User downloads directly from the backend via link
+- Tier 1-2 tools (search, filters, links): metadata only, no content to the LLM
+- Tier 3 tool (`read_document_content`): **exception** -- sends extracted text
+  to the LLM, but ONLY after explicit user consent via `render_chips`
+- User downloads files directly from the backend via link
 - Document titles may contain PII (same as current REST API) --
   Guarded Conversation / Model Armor handles output sanitization
 
