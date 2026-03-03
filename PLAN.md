@@ -305,6 +305,64 @@ MCP server the same way REST handler tests do.
 - Returns: **URL only, not the bytes**
 - Agent UX: *"Here's the file you shared"* with a download link
 
+### Tool Design Principles (Performance & Resilience)
+
+The current agent tool chain has known issues: chained tool calls are slow, and
+a single failure can leave the agent stuck. These principles mitigate both.
+
+**1. Fat tools over thin tools.**
+Return everything the LLM needs in one call. Don't force multiple roundtrips.
+
+```
+❌ 3 chained calls (slow, fragile):
+  search_documents → returns IDs only
+  get_document_details → returns metadata
+  get_document_link → returns URL
+
+✅ 1 call (fast, self-contained):
+  search_health_documents → returns metadata + links + download URLs
+```
+
+**2. Structured error messages that guide the LLM.**
+When a tool fails, the error message is the LLM's only recovery signal.
+Tell it what happened AND what to tell the user.
+
+```
+❌ BAD: "failed to search documents"
+   → LLM doesn't know what to do, may hallucinate or retry blindly
+
+✅ GOOD: "No documents found matching the query. The member may not have
+   any health documents uploaded. Suggest the member check their document
+   upload status or try a different filter category."
+   → LLM can relay this naturally to the user
+```
+
+**3. Minimize chain depth -- design for the common case.**
+For 80% of queries ("show my documents", "do I have any statements?"),
+the LLM should be able to answer from a single tool call.
+
+```mermaid
+flowchart LR
+    subgraph "Tier 1-2: 1 tool call ≈ 3-5s"
+        Q1["'Show my documents'"] --> T1["search_health_documents"]
+        T1 --> R1["Agent responds with list"]
+    end
+
+    subgraph "Tier 3: 3-4 tool calls ≈ 12-20s"
+        Q2["'What was my copay?'"] --> T2["search → consent chips → read content → respond"]
+    end
+```
+
+**Latency budget:** Each LLM reasoning step costs 2-5 seconds (Gemini inference).
+Tool HTTP calls are fast (~100-200ms). Total latency ≈ N × LLM reasoning time.
+The consent interaction in Tier 3 masks perceived wait time since the user
+must click before the chain continues.
+
+**4. Tool descriptions are routing logic.**
+The LLM decides which tool to call based entirely on the description string.
+Vague descriptions cause wrong tool selection. Be specific about WHEN to use
+the tool, not just WHAT it does.
+
 ### How the LLM Chooses Between Sources
 
 The LLM picks tools based on their descriptions. Good descriptions are critical:
