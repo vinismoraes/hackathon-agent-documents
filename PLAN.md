@@ -14,7 +14,7 @@ to build something real. Optional demos at Townhall on March 5.
 | Service | What It Does |
 |---------|-------------|
 | **Messaging / ChatHub** | AI chat experience: WebSocket, SSE streaming from Agent Orchestrator, MCP server (render_chips, render_card) |
-| **Connected Care / Document Management** | Document CRUD, search, upload/download -- proxy to tenant connectors (SCAN, mock) |
+| **Connected Care / Document Management** | Document CRUD, search, upload/download via extensions client (tenant-agnostic) |
 
 ---
 
@@ -181,7 +181,7 @@ Users have documents in two places. The agent needs to know about both.
 | | Connected Care Documents | Messaging Attachments |
 |---|---|---|
 | **Examples** | Statements, bills, plan docs, uploads | Files shared in chat threads |
-| **Storage** | SCAN / tenant connector / GCS | Highmark / extensions backend |
+| **Storage** | Tenant extension backend | Tenant extension backend |
 | **Has search** | Yes (filters, pagination) | No (embedded in thread messages) |
 | **Has download** | Yes (`GET /document-content/{id}`) | Yes (`GET /messaging-documents/{id}`) |
 | **MCP server** | New (:18006) | Existing (:18005) |
@@ -211,7 +211,7 @@ flowchart TD
 
     search_attachments --> MSG_SVC["Messaging Service Layer"]
     get_attach_link --> MSG_SVC
-    MSG_SVC --> MSG_CONN["Tenant Connector\n(Highmark/Extensions)"]
+    MSG_SVC --> MSG_CONN["Tenant Extension\nBackend"]
 
     search_health --> EXT["Extensions Client\n(modern path)"]
     get_filters --> EXT
@@ -245,7 +245,7 @@ flowchart TD
     style EXT2 fill:#4caf50,color:#000
 ```
 
-- **Connector** = legacy pattern (SCAN connector, mock connector)
+- **Connector** = legacy pattern (tenant-specific, being phased out)
 - **Extensions client** = modern pattern (HTTP to tenant extension backends)
 - REST handlers check a feature flag to choose between them
 - **MCP tools go directly through the extensions client** -- no feature flag
@@ -554,23 +554,23 @@ sequenceDiagram
 ```
 
 **Why this works for the hackathon:**
-- Mock connector returns fake documents -- no real PHI in the demo
+- Mock extension returns fake documents -- no real PHI in the demo
 - Consent UX uses existing `render_chips` -- no frontend changes
 - The LLM handles the consent conversation naturally from the tool description
 - Demonstrates responsible AI thinking alongside ambitious product vision
 
-**Multi-tenant by design:** The tools work for ALL tenants, not just SCAN.
-The connector abstraction already handles this -- the service layer routes
-to the right connector based on tenant ID from the JWT. The MCP tools
-never mention SCAN or any specific tenant.
+**Multi-tenant by design:** The tools work for ALL tenants. The extensions
+client routes to the correct tenant extension backend based on
+`ctx.TenantId()` from the JWT. The MCP tools never reference any
+specific tenant.
 
 ```mermaid
 flowchart TD
     MCP["MCP Tool\n(tenant-agnostic)"] --> EXT["Extensions Client"]
     EXT --> ROUTER["Extensions Router"]
-    ROUTER -->|"ctx.TenantId() = SCAN"| SCAN_EXT["SCAN Extension Backend"]
-    ROUTER -->|"ctx.TenantId() = League"| MOCK_EXT["Mock Extension / MockServer"]
-    ROUTER -->|"ctx.TenantId() = ?"| FUTURE_EXT["Future Tenant Extension"]
+    ROUTER -->|"ctx.TenantId() = A"| EXT_A["Tenant A Extension"]
+    ROUTER -->|"ctx.TenantId() = B"| EXT_B["Tenant B Extension"]
+    ROUTER -->|"ctx.TenantId() = ..."| EXT_N["Future Tenant Extension"]
 
     style MCP fill:#4fc3f7,color:#000
     style EXT fill:#4fc3f7,color:#000
@@ -585,10 +585,10 @@ configuring a new extension backend -- zero changes to the MCP tools.
 This is the same multi-tenant pattern the REST API already uses. The
 MCP tools inherit it for free.
 
-**Content extraction varies by tenant.** SCAN returns PDFs, another tenant
-might return HTML or images. The `read_document_content` tool needs a
-text extraction layer that handles multiple formats. For the hackathon,
-the mock connector returns simple text -- no extraction needed.
+**Content extraction varies by tenant.** One tenant may return PDFs,
+another might return HTML or images. The `read_document_content` tool
+needs a text extraction layer that handles multiple formats. For the
+hackathon, the mock extension returns simple text -- no extraction needed.
 
 ### Content Storage Strategy (Production Decision)
 
@@ -617,12 +617,12 @@ flowchart TD
 
 | Option | Storage | PHI Risk | Power | Ownership Change | Multi-tenant |
 |---|---|---|---|---|---|
-| **1: Fetch on demand** | None | At call time | Medium | None | Works (each connector) |
+| **1: Fetch on demand** | None | At call time | Medium | None | Works (each extension) |
 | **2: Cache with TTL** | Temporary copies | Cached PHI | Medium | Partial | Per-tenant TTL/policy |
 | **3: RAG pipeline** | Full text + embeddings | High | Maximum | **Full** | Heavy per-tenant infra |
 | **4: Structured fields** | Derived data only | Minimal | Limited | Minimal | Per-tenant extractors |
 
-**Hackathon: Option 1** -- fetch on demand, no storage, works with any connector.
+**Hackathon: Option 1** -- fetch on demand, no storage, works with any extension.
 
 **Production: team decision** -- likely Option 1 first, evolve to Option 2 or 4
 based on latency requirements and compliance review. The MCP tool is an
@@ -633,7 +633,7 @@ affecting the agent interface.
 
 | Requirement | Hackathon | Production |
 |---|---|---|
-| Multi-tenant | Mock connector | All tenant connectors (SCAN, future) |
+| Multi-tenant | Mock extension | All tenant extensions |
 | User consent | Chips UX (done) | Chips UX + legal copy |
 | PHI to LLM | Mock data only | Requires Google BAA / HIPAA review |
 | Audit trail | Log to stdout | Structured audit to compliance system |
@@ -656,7 +656,7 @@ affecting the agent interface.
 - [ ] Implement `read_document_content` (the "wow" tool)
 - [ ] Wire up startup/shutdown in connected_care
 - [ ] Add MCP config to AOR's config.toml
-- [ ] Test full flow with mock connector via AOR chat CLI
+- [ ] Test full flow with mock extension via AOR chat CLI
 - [ ] Practice the consent flow demo: question → consent → answer
 - [ ] Stretch: `search_conversation_attachments` in messaging MCP
 - [ ] Stretch: `get_attachment_link` in messaging MCP
@@ -803,7 +803,7 @@ flowchart TD
   > is ready."
 
 **Step 5 -- Jaeger Trace (30 sec)**
-- Show the full span: AOR → MCP tools/call → service → connector
+- Show the full span: AOR → MCP tools/call → extensions client → extension
 - Point out the `read_document_content` call with consent audit
 
 **Step 6 -- Wrap Up (1 min)**
@@ -937,7 +937,7 @@ pattern applies to every domain -- benefits, health, care team, claims.
   write a REST endpoint, you can write an MCP tool."
 - "The tool_filter in AOR config acts like feature flags -- you can
   register tools but only expose them when ready."
-- "The mock connector means you can develop and test without tenant
+- "The mock extension means you can develop and test without tenant
   dependencies. Same mock-first approach we use for REST."
 - "The 5-minute cache TTL means you can iterate fast locally -- add a tool,
   restart the MCP server, and AOR picks it up automatically."
@@ -1033,9 +1033,9 @@ If the proxy concern feels too limiting, alternative angles:
 ### Backend Extensions (mock for demo)
 - Mock documents extension: `backend-extensions/connectors/mocks/documents/`
 - Mock data source: `backend-modules/backend-extensions/mocks/documents`
-- League documents extension: `backend-extensions/connectors/league/documents/`
 - Documents template/spec: `backend-modules/backend-extensions/templates/documents`
 - Run locally: `gcloud alpha functions local deploy test --entry-point=Entrypoint --runtime=go121`
+- Standalone demo mock: `demo-mock-server/` in this repo (preferred for hackathon)
 
 ### Agent Orchestrator (config only)
 - Config file: `agent-orchestrator/apps/agent-orchestrator/src/config.toml`
