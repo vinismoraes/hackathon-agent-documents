@@ -144,25 +144,25 @@ tool_filter = []
 ### Privacy-First Design Principle
 
 ```mermaid
-flowchart LR
-    subgraph "What the agent SEES (metadata only)"
-        META["Title, type, date,\nfile size, actions"]
+flowchart TD
+    subgraph TIER12 ["Tier 1-2: Metadata Only"]
+        META["Titles, dates, types, actions"]
+        LINK["Download URLs"]
     end
 
-    subgraph "What the agent NEVER sees (raw content)"
-        CONTENT["PDF bytes, images,\nmedical info, PII"]
+    subgraph TIER3 ["Tier 3: Consent-Gated"]
+        CONTENT["Extracted text content"]
     end
 
-    subgraph "What the user GETS"
-        LINK["Download link\n(direct to backend)"]
-    end
-
-    META -->|"Agent summarizes"| USER[User]
-    LINK -->|"User clicks"| USER
-    CONTENT -.->|"ONLY with user consent\n(Tier 3)"| LLM[LLM]
+    META --> USER[User]
+    LINK --> USER
+    CONTENT -.->|"Only after\nuser consent"| LLM[LLM]
+    LLM -->|"Answers question"| USER
 
     style CONTENT fill:#ff9800,color:#000
     style LLM fill:#ff9800,color:#000
+    style META fill:#4caf50,color:#000
+    style LINK fill:#4caf50,color:#000
 ```
 
 **Default rule: tools return metadata + download links, not raw content.**
@@ -230,14 +230,14 @@ The document management codebase has two paths:
 
 ```mermaid
 flowchart TD
-    subgraph "REST Handlers (server_impl.go)"
-        FLAG{"Feature flag\nexperiment_document_\nmanagement_extensions"}
-        FLAG -->|"ON (modern)"| EXT["Extensions Client"]
-        FLAG -->|"OFF (legacy)"| SVC["Service Layer\n→ Connector"]
+    subgraph REST ["REST Handlers"]
+        FLAG{"Feature flag"}
+        FLAG -->|"ON"| EXT["Extensions Client ✅"]
+        FLAG -->|"OFF"| SVC["Legacy Connector ⚠️"]
     end
 
-    subgraph "MCP Tools (new code)"
-        MCP["MCP Tool"] --> EXT2["Extensions Client\n(directly)"]
+    subgraph MCP_TOOLS ["MCP Tools (new)"]
+        MCP["MCP Tool"] --> EXT2["Extensions Client ✅"]
     end
 
     style SVC fill:#ff9800,color:#000
@@ -595,25 +595,23 @@ the mock connector returns simple text -- no extraction needed.
 For `read_document_content`, the tool needs document bytes. Four options:
 
 ```mermaid
-flowchart LR
-    subgraph "Option 1: Fetch on Demand ← HACKATHON"
-        A1["MCP tool"] -->|"every call"| B1["Tenant Connector"]
-        B1 --> C1["Tenant API"]
+flowchart TD
+    subgraph OPT1 ["Option 1: Fetch on Demand ⬅ HACKATHON"]
+        A1["MCP tool"] --> B1["Extension Backend"]
     end
 
-    subgraph "Option 2: Cache with TTL"
-        A2["MCP tool"] -->|"check cache"| B2["Redis/GCS\n(1hr TTL)"]
-        B2 -->|"miss"| C2["Tenant API"]
+    subgraph OPT2 ["Option 2: Cache + TTL"]
+        A2["MCP tool"] --> B2["Redis/GCS"]
+        B2 -->|"miss"| C2["Extension Backend"]
     end
 
-    subgraph "Option 3: RAG Pipeline"
-        A3["Ingestion"] -->|"ETL"| B3["Vector DB +\nembeddings"]
-        A3b["MCP tool"] -->|"semantic search"| B3
+    subgraph OPT3 ["Option 3: RAG"]
+        A3["Ingestion ETL"] --> B3["Vector DB"]
+        A3b["MCP tool"] --> B3
     end
 
-    subgraph "Option 4: Structured Only"
-        A4["MCP tool"] -->|"fetch"| B4["Extract fields:\namounts, dates"]
-        B4 -->|"no raw text"| A4
+    subgraph OPT4 ["Option 4: Structured"]
+        A4["MCP tool"] --> B4["Field Extractor"]
     end
 ```
 
@@ -671,30 +669,26 @@ affecting the agent interface.
 ### Demo Setup (What to Run)
 
 ```mermaid
-flowchart LR
-    subgraph "Docker (make up-chat)"
-        AOR["Agent Orchestrator\n:8080"]
-        GC["Guarded Conversation\n:8081"]
-        MOCK_MCP["Mocked MCP Server\n:8686"]
-        MONGO["MongoDB\n:27018"]
-        JAEGER["Jaeger\n:16686"]
+flowchart TD
+    subgraph DOCKER ["Docker (make up-chat)"]
+        AOR["AOR :8080"]
+        GC["Guarded Conv :8081"]
+        JAEGER["Jaeger :16686"]
     end
 
-    subgraph "Local Go Process"
-        CC["Connected Care App"]
-        CC_MCP["Documents MCP\n:18006"]
+    subgraph LOCAL ["Local Go Process"]
+        CC_MCP["Docs MCP :18006"]
     end
 
-    subgraph "Browser Tools"
+    subgraph BROWSER ["Browser"]
         INSPECTOR["MCP Inspector"]
         JAEGER_UI["Jaeger UI"]
     end
 
-    CLI["Terminal Chat\n(make up-chat)"] -->|"POST /v1/run"| AOR
-    AOR -->|"host.docker.internal:18006"| CC_MCP
-    CC_MCP --> CC
-    INSPECTOR -->|"localhost:18006/mcp"| CC_MCP
-    JAEGER_UI -->|"localhost:16686"| JAEGER
+    CLI["Chat CLI"] -->|"/v1/run"| AOR
+    AOR -->|"MCP"| CC_MCP
+    INSPECTOR --> CC_MCP
+    JAEGER_UI --> JAEGER
 ```
 
 ### Startup Checklist
@@ -724,33 +718,25 @@ flowchart LR
 ### Full Local Demo Stack
 
 ```mermaid
-flowchart LR
-    subgraph "Docker: AOR (make up-chat)"
-        AOR["Agent Orchestrator\n:8080"]
-        JAEGER["Jaeger\n:16686"]
+flowchart TD
+    subgraph DOCKER ["Docker: AOR"]
+        AOR["AOR :8080"]
+        JAEGER["Jaeger :16686"]
     end
 
-    subgraph "Local: Connected Care"
-        CC["Connected Care App"]
-        CC_MCP["Documents MCP\n:18006"]
+    subgraph LOCAL ["Local: Connected Care"]
+        CC_MCP["Docs MCP :18006"]
+        CC["CC App"]
     end
 
-    subgraph "Local: Mock Extension (gcloud emulator)"
-        MOCK_EXT["Mock Documents Extension\nconnectors/mocks/documents"]
+    subgraph MOCK ["Local: Mock Extension"]
+        MOCK_EXT["demo-mock-server :8090"]
     end
 
-    subgraph "Browser"
-        INSPECTOR["MCP Inspector"]
-        JAEGER_UI["Jaeger UI"]
-    end
-
-    CLI["AOR Chat CLI"] -->|"POST /v1/run"| AOR
-    AOR -->|"host.docker.internal:18006"| CC_MCP
+    CLI["Chat CLI"] --> AOR
+    AOR -->|"MCP"| CC_MCP
     CC_MCP --> CC
-    CC -->|"Extensions Client\n(HTTP)"| MOCK_EXT
-    MOCK_EXT -->|"sample filters,\ndocs, content"| CC
-    INSPECTOR -->|"localhost:18006/mcp"| CC_MCP
-    JAEGER_UI --> JAEGER
+    CC -->|"HTTP"| MOCK_EXT
 ```
 
 **Mock extension returns:**
@@ -767,15 +753,11 @@ See "Demo Mock Server" section below.
 
 ```mermaid
 flowchart TD
-    A["1. Show the Problem\n'Today, users find documents\nvia the mobile app only'"] --> B
-
-    B["2. Show the MCP Tools\n(MCP Inspector in browser)\n- tools/list → 3 tools\n- Call get_document_filters\n- Call search_documents"] --> C
-
-    C["3. Show the Agent Using Them\n(AOR Chat CLI in terminal)\nType: 'What documents do I have?'\nWatch Gemini call your tools"] --> D
-
-    D["4. Show the Trace\n(Jaeger in browser)\nFull call chain with timing:\nAOR → MCP → Service → Connector"] --> E
-
-    E["5. The Punchline\n'Built in 2 days using\nCursor Agent mode.\nNo AOR code changes.\nNo frontend changes.'"]
+    A["1. The Problem\nDocuments require app navigation"] --> B
+    B["2. MCP Inspector\nShow tools/list, call filters + search"] --> C
+    C["3. Agent Chat\nAsk 'What documents do I have?'"] --> D
+    D["4. Jaeger Trace\nAOR → MCP → Service → Extension"] --> E
+    E["5. Punchline\n2 days, no AOR changes, no FE changes"]
 ```
 
 ### Detailed Demo Script
@@ -868,20 +850,18 @@ The user types *"show me my latest statement"* in chat. Done. One step.
 **Why this is bigger than documents:**
 
 ```mermaid
-flowchart TD
-    subgraph "Today: Siloed Features"
-        DOC_UI["Documents UI"] --- DOC_API["Documents API"]
-        BENEFITS_UI["Benefits UI"] --- BENEFITS_API["Benefits API"]
-        HEALTH_UI["Health UI"] --- HEALTH_API["Health API"]
-        CARE_UI["Care Team UI"] --- CARE_API["Care Team API"]
+flowchart LR
+    subgraph TODAY ["Today: Siloed"]
+        DOC_UI["Documents UI"] --- DOC_API["Docs API"]
+        BEN_UI["Benefits UI"] --- BEN_API["Benefits API"]
+        CARE_UI["Care UI"] --- CARE_API["Care API"]
     end
 
-    subgraph "Tomorrow: Agent as Universal Interface"
-        CHAT["Chat Interface"] --> AGENT["AI Agent"]
-        AGENT -->|MCP| DOC_MCP["Documents MCP"]
-        AGENT -->|MCP| BENEFITS_MCP["Benefits MCP"]
-        AGENT -->|MCP| HEALTH_MCP["Health MCP"]
-        AGENT -->|MCP| CARE_MCP["Care Team MCP"]
+    subgraph TOMORROW ["Tomorrow: Agent"]
+        CHAT["Chat"] --> AGENT["AI Agent"]
+        AGENT --> DOC_MCP["Docs MCP"]
+        AGENT --> BEN_MCP["Benefits MCP"]
+        AGENT --> CARE_MCP["Care MCP"]
     end
 ```
 
