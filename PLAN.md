@@ -913,11 +913,14 @@ pattern applies to every domain -- benefits, health, care team, claims.
    (render_card, render_chips). The agent composes them. This is a natural
    backend/frontend separation at the AI layer.
 
-5. **No AOR code changes, no FE changes** -- This is the power of the
-   architecture. Adding a new capability to the AI agent requires:
+5. **No AOR code changes, no FE changes, no ChatHub code changes** -- This
+   is the power of the architecture. Adding a new capability to the AI agent
+   requires:
    - Backend team: build MCP tools (Go, same patterns as REST handlers)
    - AOR team: 3 lines of config
    - Frontend team: nothing (existing UI widgets)
+   - ChatHub team: nothing (already connected to AOR; new tools are
+     available to all ChatHub users the moment they deploy)
 
 6. **Extensibility template** -- This creates a replicable pattern. Any team
    that owns a backend service can follow the same steps to expose their
@@ -927,6 +930,9 @@ pattern applies to every domain -- benefits, health, care team, claims.
 
 **Technical talking points for engineers:**
 
+- "ChatHub already talks to AOR. My MCP tools are registered in AOR. The
+  moment these deploy, every ChatHub user gets document intelligence --
+  zero ChatHub code changes, zero frontend changes."
 - "MCP tools are just REST handlers with a different transport. If you can
   write a REST endpoint, you can write an MCP tool."
 - "The tool_filter in AOR config acts like feature flags -- you can
