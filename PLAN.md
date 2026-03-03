@@ -942,6 +942,24 @@ pattern applies to every domain -- benefits, health, care team, claims.
 - "The 5-minute cache TTL means you can iterate fast locally -- add a tool,
   restart the MCP server, and AOR picks it up automatically."
 
+**Production evolution: standalone tools → capability agent**
+
+The hackathon builds standalone MCP tools -- the LLM decides when and how
+to call them. This is fast to build (no AOR code) and flexible. But for
+production, the consent flow should move into a deterministic capability
+agent in AOR:
+
+- **Hackathon (standalone tools):** LLM reads "requires consent" in the
+  tool description and usually asks. Good enough for demo, not for compliance.
+- **Production (capability agent):** A Python agent in AOR with a hardcoded
+  workflow: search → ask consent → read content. Guarantees consent is
+  never skipped. The MCP tools remain the same -- only the orchestration
+  changes.
+
+This is a deliberate two-step approach: prove the tools work first, then
+harden the orchestration. The MCP tool interface is the stable contract
+between both approaches.
+
 ### The Strategic Pitch (for leadership)
 
 This connects directly to the hackathon's stated vision:
