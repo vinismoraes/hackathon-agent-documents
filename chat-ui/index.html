@@ -532,19 +532,21 @@
   <div id="chat">
     <div class="welcome" id="welcome">
       <div class="welcome-icon">&#x1f4cb;</div>
-      <h2>Your Health Documents Assistant</h2>
-      <p>I can search, browse, and read your health documents. Ask me anything about your statements, bills, or plan documents.</p>
+      <h2>Your Health Assistant</h2>
+      <p>I can search your health documents and conversation attachments, read files with your consent, and help you find what you need.</p>
       <div class="suggestions">
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C2;</div>What health documents do I have?</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4AC;</div>What files were shared in my conversations?</div>
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C4;</div>Show me my monthly statements</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4B3;</div>Find my latest premium bill</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4CE;</div>Find attachments from my care navigator</div>
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F50D;</div>Read my January 2026 statement and summarize it</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F48A;</div>Do I have a medication guide in my messages?</div>
       </div>
     </div>
   </div>
   <button id="scroll-btn" onclick="scrollDown(true)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    New messages
+    Scroll to bottom
   </button>
 </div>
 
@@ -668,6 +670,7 @@ async function send(retryText) {
   const pendingTools = {};
   let agentBubble = null;
   let agentText = '';
+  let lastEventId = null;
   let thinkingRemoved = false;
 
   function removeThinking() {
@@ -719,9 +722,13 @@ async function send(retryText) {
         const msg = event.message;
         if (typeof msg !== 'object') continue;
 
+        if (event.id && event.id !== lastEventId) {
+          lastEventId = event.id;
+          agentText = '';
+        }
+
         for (const part of (msg.parts || [])) {
           if (part.function_call) {
-            removeThinking();
             const name = part.function_call.name || '?';
             const id = part.function_call.id || name;
             const args = part.function_call.args || part.function_call.arguments;
@@ -749,8 +756,24 @@ async function send(retryText) {
             agentBubble.querySelector('.bubble').innerHTML = renderMarkdown(agentText);
             scrollDown();
           }
-          if (part.cards && part.cards.length) { removeThinking(); addCards(part.cards); }
-          if (part.chips && part.chips.length) { removeThinking(); addChips(part.chips); }
+          if (part.cards && part.cards.length) {
+            removeThinking();
+            addCards(part.cards);
+            for (const id in pendingTools) {
+              if (pendingTools[id].getAttribute('data-raw-name').includes('render_card') && !pendingTools[id].classList.contains('done')) {
+                markToolDone(pendingTools[id]);
+              }
+            }
+          }
+          if (part.chips && part.chips.length) {
+            removeThinking();
+            addChips(part.chips);
+            for (const id in pendingTools) {
+              if (pendingTools[id].getAttribute('data-raw-name').includes('render_chips') && !pendingTools[id].classList.contains('done')) {
+                markToolDone(pendingTools[id]);
+              }
+            }
+          }
         }
       }
     }
@@ -898,16 +921,22 @@ function addCards(cards) {
       html += '<div class="card-buttons">';
       for (const btn of card.buttons) {
         let url = btn.value || '';
-        const docMatch = url.match(/\/v1\/document-content\/([^?&/]+)/) || url.match(/documentId=([^?&]+)/);
-        if (docMatch) {
-          url = '/doc-content/' + docMatch[1];
+        const ccDocMatch = url.match(/\/v1\/document-content\/([^?&/]+)/) || url.match(/documentId=([^?&]+)/);
+        if (ccDocMatch) {
+          url = '/doc-content/' + ccDocMatch[1];
+        }
+        const msgDocMatch = url.match(/\/v1\/messaging-documents\/([^?&/]+)/);
+        if (msgDocMatch) {
+          url = '/msg-content/' + msgDocMatch[1];
+        }
+        const isAttachId = !url.startsWith('http') && !url.startsWith('/') && url.startsWith('attach-');
+        if (isAttachId) {
+          url = '/msg-content/' + url;
         }
         const isUrl = url.startsWith('http') || url.startsWith('/');
-        const label = (btn.label || '').toLowerCase();
-        if (isUrl && label.includes('download')) {
-          html += '<a class="card-btn" href="' + esc(url) + '" download>' + SVG_DOWNLOAD + ' ' + esc(btn.label) + '</a>';
-        } else if (isUrl) {
-          html += '<a class="card-btn" href="' + esc(url) + '" target="_blank">' + SVG_EYE + ' ' + esc(btn.label) + '</a>';
+        if (isUrl) {
+          html += '<a class="card-btn" href="' + esc(url) + '" target="_blank">' + SVG_EYE + ' View</a>';
+          html += '<a class="card-btn" href="' + esc(url) + '" download>' + SVG_DOWNLOAD + ' Download</a>';
         } else {
           html += '<span class="card-btn" onclick="sendSuggestion(this)">' + esc(btn.label) + '</span>';
         }
@@ -964,7 +993,8 @@ function renderMarkdown(text) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*{2,}/g, '');
+    .replace(/\*{2,}/g, '')
+    .replace(/^[ \t]*[?!.][ \t]*$/gm, '');
 
   // Convert markdown lists to HTML
   const lines = html.split('\n');

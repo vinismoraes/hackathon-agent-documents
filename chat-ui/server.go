@@ -107,6 +107,28 @@ func main() {
 		io.Copy(w, resp.Body)
 	})
 
+	// Proxy messaging attachment content (mock data, no real backend)
+	mux.HandleFunc("/msg-content/", func(w http.ResponseWriter, r *http.Request) {
+		docID := r.URL.Path[len("/msg-content/"):]
+		if docID == "" {
+			http.Error(w, "missing attachment ID", 400)
+			return
+		}
+		mockContent := map[string]string{
+			"attach-001": "PRE-VISIT QUESTIONNAIRE\n\nPatient: Demo User\nAppointment: March 15, 2026 at 10:00 AM\nProvider: Dr. Chen\n\n1. Current medications: _______________\n2. Known allergies: _______________\n3. Recent surgeries or hospitalizations: _______________\n4. Primary reason for visit: Annual Checkup\n\nPlease bring this completed form to your appointment.",
+			"attach-002": "SUMMARY OF BENEFITS — Gold PPO Plan 2026\n\nMember: Demo User\nPlan Year: January 1 – December 31, 2026\n\nPhysiotherapy Coverage:\n  • Sessions per year: 20\n  • Coverage: 80% after deductible\n  • Deductible: $500 individual / $1,000 family\n  • In-network copay: $30 per session\n\nPreventive Care: Covered 100% in-network\nEmergency Services: $250 copay, then 80%\nPrescription Drugs (generic): $10 copay",
+			"attach-003": "PRESCRIPTION REFILL RECEIPT\n\nPharmacy: HealthFirst Pharmacy\nDate: January 15, 2026\nPatient: Demo User\n\nMedication: Lisinopril 10mg\nQuantity: 90 tablets (90-day supply)\nRefill #: 3 of 5\n\nCost Summary:\n  Retail price: $45.00\n  Plan pays: $35.00\n  Your copay: $10.00\n\nNext refill available: April 15, 2026",
+			"attach-004": "MEDICATION GUIDE: LISINOPRIL\n\nGeneric Name: Lisinopril\nBrand Names: Prinivil, Zestril\nDrug Class: ACE Inhibitor\n\nWhat is Lisinopril used for?\n  • High blood pressure (hypertension)\n  • Heart failure\n  • Post-heart attack recovery\n\nImportant Safety Information:\n  • Take once daily, with or without food\n  • Avoid potassium supplements unless directed\n  • Report dizziness, persistent cough, or swelling\n  • Do not use if pregnant\n\nCommon Side Effects:\n  Headache, dizziness, cough, fatigue\n\nContact your healthcare provider with questions.",
+		}
+		text, ok := mockContent[docID]
+		if !ok {
+			text = fmt.Sprintf("Mock content for messaging attachment %s.\nThis is placeholder content for the hackathon demo.", docID)
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.txt"`, docID))
+		fmt.Fprint(w, text)
+	})
+
 	mux.Handle("/", http.FileServer(http.FS(content)))
 
 	port := 8093

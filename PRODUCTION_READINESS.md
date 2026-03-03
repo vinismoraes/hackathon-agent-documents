@@ -200,7 +200,49 @@ sequenceDiagram
 - [ ] **Add metrics** for tool call latency, error rates, and attachment counts
 - [ ] **Set up alerts** for MCP server health and tool execution failures
 
-### 7. Code Cleanup
+### 7. Known Issue: UI Tool Calling Loop
+
+During demo testing, the LLM occasionally enters a loop calling `render_card` and
+`render_chips` repeatedly. This is an **AOR agent-loop issue**, not a client or MCP
+tool issue.
+
+```mermaid
+sequenceDiagram
+    participant LLM as LLM (Gemini)
+    participant AOR as AOR Agent Loop
+    participant MCP as MCP Server
+
+    LLM->>AOR: Call render_chips(labels)
+    AOR->>MCP: tools/call render_chips
+    MCP-->>AOR: Response with chips payload
+    AOR-->>LLM: function_response + chips in message
+    Note over LLM: LLM does not consider<br/>render_chips "resolved"
+    LLM->>AOR: Call render_chips(labels) again
+    Note over AOR: Loop continues until<br/>max iterations or timeout
+```
+
+**Root cause:** The LLM sometimes doesn't treat the `render_chips` / `render_card`
+function response as a terminal action, and re-invokes the tool in the next agent
+loop iteration.
+
+**Demo workaround:** The chat UI detects when cards or chips arrive and visually
+marks the corresponding tool as "Done" to prevent the UI from showing duplicates.
+This is cosmetic — the loop still happens server-side.
+
+**Production fix needed (AOR level):**
+- [ ] Investigate whether AOR's agent loop should treat `render_card` / `render_chips`
+  as terminal tools that end the current turn (similar to how a final text response
+  ends the turn)
+- [ ] Alternatively, add a `max_consecutive_tool_calls` guard in AOR to break out
+  of loops after N identical tool calls
+- [ ] Consider whether the tool response schema needs adjustment so the LLM
+  reliably recognizes completion
+
+**Impact on Chathub:** This same loop would reproduce in the production Chathub UI
+since the behavior originates in the AOR agent loop, not the client. The fix must
+be applied at the AOR or tool-description level before production rollout.
+
+### 8. Code Cleanup
 
 All hackathon-specific code is tagged with `// HACKATHON` comments. To find every instance:
 
