@@ -985,6 +985,21 @@ This hackathon project is a concrete step toward that flywheel. It
 demonstrates the pattern, proves it works end-to-end, and creates a
 template for every other team to follow.
 
+**What this pattern looks like for other teams:**
+
+| Team | MCP Tool | User asks | Agent does |
+|---|---|---|---|
+| **Benefits** | `check_coverage` | "Does my plan cover physiotherapy?" | Calls benefits API, returns coverage details |
+| **Care Team** | `find_provider` | "Who is my primary care doctor?" | Calls care navigation, returns provider info |
+| **Claims** | `get_claim_status` | "What happened with my last claim?" | Calls claims API, returns status and amounts |
+| **Pharmacy** | `check_prescription` | "When is my refill due?" | Calls pharmacy API, returns prescription schedule |
+| **Appointments** | `book_appointment` | "Schedule a checkup next week" | Calls scheduling API, creates appointment |
+
+Each team builds 1-3 MCP tools wrapping their existing APIs. No
+coordination between teams. No AOR code. The agent gets smarter with
+each addition. Documents is the first example -- the pattern is the
+real deliverable.
+
 ---
 
 ## Other Ideas (Parking Lot)
