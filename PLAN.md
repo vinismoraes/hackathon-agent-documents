@@ -156,7 +156,7 @@ flowchart TD
 
     META --> USER[User]
     LINK --> USER
-    CONTENT -.->|"Only after\nuser consent"| LLM[LLM]
+    CONTENT -.->|"Only after<br/>user consent"| LLM[LLM]
     LLM -->|"Answers question"| USER
 
     style CONTENT fill:#ff9800,color:#000
@@ -211,14 +211,14 @@ flowchart TD
 
     search_attachments --> MSG_SVC["Messaging Service Layer"]
     get_attach_link --> MSG_SVC
-    MSG_SVC --> MSG_CONN["Tenant Extension\nBackend"]
+    MSG_SVC --> MSG_CONN["Tenant Extension<br/>Backend"]
 
-    search_health --> EXT["Extensions Client\n(modern path)"]
+    search_health --> EXT["Extensions Client<br/>(modern path)"]
     get_filters --> EXT
     get_doc_link --> EXT
     read_content --> EXT
-    EXT --> EXT_ROUTER["Extensions Router\n(per-tenant routing)"]
-    EXT_ROUTER --> TENANT["Tenant Extension\n(HTTP backend)"]
+    EXT --> EXT_ROUTER["Extensions Router<br/>(per-tenant routing)"]
+    EXT_ROUTER --> TENANT["Tenant Extension<br/>(HTTP backend)"]
 ```
 
 Each tool lives in the MCP server of the service that owns the data.
@@ -566,7 +566,7 @@ specific tenant.
 
 ```mermaid
 flowchart TD
-    MCP["MCP Tool\n(tenant-agnostic)"] --> EXT["Extensions Client"]
+    MCP["MCP Tool<br/>(tenant-agnostic)"] --> EXT["Extensions Client"]
     EXT --> ROUTER["Extensions Router"]
     ROUTER -->|"ctx.TenantId() = A"| EXT_A["Tenant A Extension"]
     ROUTER -->|"ctx.TenantId() = B"| EXT_B["Tenant B Extension"]
@@ -753,11 +753,11 @@ See "Demo Mock Server" section below.
 
 ```mermaid
 flowchart TD
-    A["1. The Problem\nDocuments require app navigation"] --> B
-    B["2. MCP Inspector\nShow tools/list, call filters + search"] --> C
-    C["3. Agent Chat\nAsk 'What documents do I have?'"] --> D
-    D["4. Jaeger Trace\nAOR → MCP → Service → Extension"] --> E
-    E["5. Punchline\n2 days, no AOR changes, no FE changes"]
+    A["1. The Problem<br/>Documents require app navigation"] --> B
+    B["2. MCP Inspector<br/>Show tools, call filters + search"] --> C
+    C["3. Agent Chat<br/>Ask 'What documents do I have?'"] --> D
+    D["4. Jaeger Trace<br/>AOR → MCP → Extension"] --> E
+    E["5. Punchline<br/>2 days, no AOR/FE changes"]
 ```
 
 ### Detailed Demo Script
@@ -975,9 +975,9 @@ answer coverage questions. Each MCP tool is a new capability.
 **The flywheel:**
 ```mermaid
 flowchart LR
-    A["More MCP tools"] --> B["Agent handles more\nuser intents"]
-    B --> C["More users prefer\nchat over app navigation"]
-    C --> D["More teams see value\nin adding MCP tools"]
+    A["More MCP tools"] --> B["Agent handles more<br/>user intents"]
+    B --> C["More users prefer<br/>chat over navigation"]
+    C --> D["More teams see value<br/>in adding MCP tools"]
     D --> A
 ```
 
