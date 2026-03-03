@@ -1000,6 +1000,22 @@ coordination between teams. No AOR code. The agent gets smarter with
 each addition. Documents is the first example -- the pattern is the
 real deliverable.
 
+**Document tools as shared infrastructure:**
+
+Once the document MCP tools exist, any agent in AOR can call them --
+not just the concierge. Other teams don't build their own document
+tools. They compose yours into their flows.
+
+| Another team's agent | Uses your document tools to... | Example |
+|---|---|---|
+| **Benefits** | Surface the plan document after explaining coverage | "Your plan covers 80% of physiotherapy. Want to see your Summary of Benefits?" |
+| **Claims** | Link to the statement matching a processed claim | "Your Jan 15 claim was processed. Details are in your January statement." |
+| **Care Navigation** | Surface pre-visit forms after booking | "Appointment confirmed. You have a pre-visit form -- want me to find it?" |
+| **Onboarding** | Guide new members to plan docs on day one | "Welcome! You have 3 plan documents. Want to review your benefits summary?" |
+
+This turns documents from a standalone feature into a composable
+capability that makes every other agent smarter.
+
 ---
 
 ## Other Ideas (Parking Lot)
