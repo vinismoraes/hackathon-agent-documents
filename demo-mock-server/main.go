@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const port = 8090
+const port = 8092
 
 // --- Filters ---
 
