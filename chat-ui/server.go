@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +15,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -127,6 +130,65 @@ func main() {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.txt"`, docID))
 		fmt.Fprint(w, text)
+	})
+
+	// Temporary file store for upload flow.
+	// The chat UI uploads the file here, gets a fileId. The MCP tool then
+	// fetches the file bytes by fileId to forward to the extension backend.
+	var fileStore sync.Map
+	const maxUploadSize = 25 * 1024 * 1024
+
+	mux.HandleFunc("/api/upload-temp", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+		if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+			http.Error(w, "file too large", 413)
+			return
+		}
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "missing file", 400)
+			return
+		}
+		defer file.Close()
+		data, err := io.ReadAll(file)
+		if err != nil {
+			http.Error(w, "read error", 500)
+			return
+		}
+		idBytes := make([]byte, 16)
+		rand.Read(idBytes)
+		fileID := hex.EncodeToString(idBytes)
+		fileStore.Store(fileID, data)
+		log.Printf("[UPLOAD] Stored temp file %s (%d bytes)", fileID, len(data))
+
+		// Auto-expire after 5 minutes
+		go func() {
+			time.Sleep(5 * time.Minute)
+			fileStore.Delete(fileID)
+			log.Printf("[UPLOAD] Expired temp file %s", fileID)
+		}()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"fileId": fileID})
+	})
+
+	mux.HandleFunc("/api/upload-temp/", func(w http.ResponseWriter, r *http.Request) {
+		fileID := strings.TrimPrefix(r.URL.Path, "/api/upload-temp/")
+		if fileID == "" {
+			http.Error(w, "missing fileId", 400)
+			return
+		}
+		data, ok := fileStore.Load(fileID)
+		if !ok {
+			http.Error(w, "file not found or expired", 404)
+			return
+		}
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Write(data.([]byte))
 	})
 
 	mux.Handle("/", http.FileServer(http.FS(content)))

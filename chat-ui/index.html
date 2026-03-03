@@ -3,23 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Health Documents Agent</title>
+<title>Documents MCP Tools Demo</title>
 <style>
   :root {
-    --primary: #4F46E5;
-    --primary-light: #818CF8;
-    --primary-bg: #EEF2FF;
-    --success: #059669;
+    --primary: #501CD2;
+    --primary-light: #7B4FE0;
+    --primary-bg: #EDE8FA;
+    --accent: #01C3A2;
+    --accent-light: #B8DCD8;
+    --accent-bg: #E6F9F5;
+    --success: #01C3A2;
     --surface: #ffffff;
-    --bg: #F8FAFC;
-    --text: #1E293B;
-    --text-muted: #64748B;
-    --text-faint: #94A3B8;
+    --bg: #F9F7F6;
+    --text: #250D53;
+    --text-muted: #595959;
+    --text-faint: #A79EBA;
     --border: #E2E8F0;
-    --user-bg: #4F46E5;
-    --tool-bg: #FFFBEB;
-    --tool-border: #FCD34D;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --user-bg: #501CD2;
+    --tool-bg: #EDE8FA;
+    --tool-border: #C4CFFD;
+    --card-shadow: 0 1px 3px rgba(37,13,83,0.08), 0 1px 2px rgba(37,13,83,0.06);
     --radius: 12px;
   }
 
@@ -36,12 +39,12 @@
 
   /* ── Header ── */
   header {
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    background: linear-gradient(135deg, #250D53 0%, #501CD2 100%);
     padding: 14px 24px;
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 2px 12px rgba(79,70,229,0.35);
+    box-shadow: 0 2px 12px rgba(37,13,83,0.35);
     z-index: 10;
   }
 
@@ -97,7 +100,7 @@
     position: absolute;
     inset: 0;
     overflow-y: auto;
-    padding: 24px 24px 16px;
+    padding: 24px 24px 80px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -153,14 +156,14 @@
     margin-top: 20px;
   }
   .avatar.ai {
-    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    background: linear-gradient(135deg, #250D53, #501CD2);
     color: white;
-    box-shadow: 0 2px 8px rgba(79,70,229,0.25);
+    box-shadow: 0 2px 8px rgba(37,13,83,0.25);
   }
   .avatar.user {
-    background: linear-gradient(135deg, #0EA5E9, #2563EB);
+    background: linear-gradient(135deg, #64748B, #475569);
     color: white;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+    box-shadow: 0 2px 8px rgba(71,85,105,0.25);
   }
 
   .msg-content { flex: 1; min-width: 0; }
@@ -194,7 +197,7 @@
     background: linear-gradient(135deg, #4F46E5, #6366F1);
     color: white;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 2px 8px rgba(79,70,229,0.2);
+    box-shadow: 0 2px 8px rgba(80,28,210,0.2);
   }
 
   .msg-row.agent .bubble {
@@ -262,7 +265,7 @@
     border: 1px solid var(--tool-border);
     border-radius: 8px;
     font-size: 12px;
-    color: #92400E;
+    color: #501CD2;
     margin: 4px 0 4px 42px;
     max-width: calc(85% - 42px);
     animation: slideIn 0.3s cubic-bezier(0.16,1,0.3,1);
@@ -272,14 +275,16 @@
   .tool-icon .spinner {
     width: 14px; height: 14px;
     border: 2px solid var(--tool-border);
-    border-top-color: #D97706;
+    border-top-color: #501CD2;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   .tool-call.done .tool-icon .spinner { display: none; }
   .tool-call.done .tool-icon .check { display: block; }
   .tool-icon .check { display: none; }
-  .tool-call.done { background: #F0FDF4; border-color: #86EFAC; color: #065F46; }
+  .tool-call.done { background: #E6F9F5; border-color: #80E1D0; color: #0A6B5C; }
+  .tool-call.error { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+  .tool-call.error .tool-icon .spinner { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .tool-info { flex: 1; min-width: 0; }
@@ -345,6 +350,24 @@
   }
   .card .card-btn:hover { background: var(--primary); color: white; }
   .card .card-btn svg { width: 12px; height: 12px; }
+  .card .card-btn.btn-view { border-color: #0EA5E9; color: #0EA5E9; }
+  .card .card-btn.btn-view:hover { background: #0EA5E9; color: white; }
+  .card .card-btn.btn-download { border-color: #10B981; color: #10B981; }
+  .card .card-btn.btn-download:hover { background: #10B981; color: white; }
+
+  /* Category badge on cards */
+  .card .card-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
 
   /* ── Chips ── */
   .chips-container {
@@ -360,14 +383,14 @@
     padding: 8px 16px;
     background: var(--primary-bg);
     color: var(--primary);
-    border: 1px solid rgba(79,70,229,0.2);
+    border: 1px solid rgba(80,28,210,0.2);
     border-radius: 20px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
   }
-  .chip:hover { background: var(--primary); color: white; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(79,70,229,0.25); }
+  .chip:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.12); filter: brightness(0.92); }
 
   /* ── Input area ── */
   #input-area {
@@ -391,8 +414,45 @@
     transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
     background: var(--bg);
   }
-  #input-area input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); background: white; }
+  #input-area input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(80,28,210,0.08); background: white; }
   #input-area input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #attach-btn {
+    width: 42px; height: 42px;
+    background: transparent;
+    color: var(--text-dim);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #attach-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(80,28,210,0.04); }
+  #attach-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #attach-btn svg { width: 18px; height: 18px; }
+
+  #file-preview {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(80,28,210,0.06);
+    border: 1px solid rgba(80,28,210,0.2);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--primary);
+    animation: slideIn 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  #file-preview .file-name { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #file-preview .file-size { color: var(--text-dim); }
+  #file-preview .file-remove {
+    cursor: pointer; background: none; border: none; color: var(--text-dim);
+    font-size: 16px; line-height: 1; padding: 0 2px; transition: color 0.15s;
+  }
+  #file-preview .file-remove:hover { color: #ef4444; }
 
   #send-btn {
     width: 42px; height: 42px;
@@ -407,7 +467,7 @@
     justify-content: center;
     flex-shrink: 0;
   }
-  #send-btn:hover { background: #4338CA; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+  #send-btn:hover { background: #3D12A8; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(80,28,210,0.3); }
   #send-btn:disabled { background: var(--border); cursor: not-allowed; transform: none; box-shadow: none; }
   #send-btn svg { width: 18px; height: 18px; fill: white; }
 
@@ -448,7 +508,7 @@
   /* ── Welcome ── */
   .welcome {
     text-align: center;
-    padding: 60px 20px 40px;
+    padding: 24px 20px 20px;
     color: var(--text-muted);
     animation: fadeUp 0.5s ease;
   }
@@ -456,32 +516,57 @@
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: none; }
   }
+  .welcome-icon-wrapper {
+    position: relative;
+    width: 96px; height: 96px;
+    margin: 0 auto 16px;
+  }
   .welcome .welcome-icon {
-    width: 72px; height: 72px;
-    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #250D53 0%, #501CD2 50%, #7B4FE0 100%);
     border-radius: 20px;
     display: inline-flex;
     align-items: center; justify-content: center;
-    font-size: 36px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 28px rgba(79,70,229,0.3);
+    font-size: 28px;
+    box-shadow: 0 8px 32px rgba(80,28,210,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset;
     animation: float 3s ease-in-out infinite;
+    position: absolute;
+    top: 16px; left: 16px;
   }
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
   }
-  .welcome h2 { font-size: 24px; color: var(--text); margin-bottom: 8px; font-weight: 700; }
-  .welcome p { font-size: 15px; margin-bottom: 28px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+  .welcome-orbit {
+    position: absolute;
+    opacity: 0;
+    animation: orbitPop 6s ease-in-out infinite;
+    pointer-events: none;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .welcome-orbit:nth-child(2) { top: -4px; right: -2px; animation-delay: 0s; background: #EFF6FF; }
+  .welcome-orbit:nth-child(3) { bottom: 0; left: -8px; animation-delay: 2s; background: #F0FDFA; }
+  .welcome-orbit:nth-child(4) { top: -6px; left: 2px; animation-delay: 4s; background: #EDE8FA; }
+  @keyframes orbitPop {
+    0%, 100% { opacity: 0; transform: scale(0.4) translateY(4px); }
+    15%, 45% { opacity: 1; transform: scale(1) translateY(0); }
+    60% { opacity: 0; transform: scale(0.6) translateY(-8px); }
+  }
+  .welcome h2 { font-size: 20px; color: var(--text); margin-bottom: 4px; font-weight: 700; }
+  .welcome p { font-size: 13px; margin-bottom: 16px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5; }
   .welcome .suggestions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 600px;
     margin: 0 auto;
   }
   .welcome .suggestion {
-    padding: 14px 18px;
+    padding: 10px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -492,7 +577,7 @@
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     line-height: 1.4;
   }
   .suggestion-icon {
@@ -503,6 +588,38 @@
     flex-shrink: 0;
     background: var(--primary-bg);
   }
+  .suggestion-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .suggestion-group-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    padding: 4px 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .suggestion-group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .tag-both { background: #EDE8FA; color: #501CD2; }
+  .tag-docs { background: #EFF6FF; color: #2563EB; }
+  .tag-msgs { background: #F0FDFA; color: #0D9488; }
+  .tag-consent { background: #FFF7ED; color: #EA580C; }
   .welcome .suggestion:hover {
     border-color: var(--primary);
     color: var(--primary);
@@ -514,10 +631,10 @@
 <body>
 
 <header>
-  <div class="logo">&#x1f3e5;</div>
+  <div class="logo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
   <div>
-    <h1>Health Documents Agent</h1>
-    <div class="subtitle">AI-powered document search &amp; analysis</div>
+    <h1>Documents MCP Tools</h1>
+    <div class="subtitle">Hackathon Demo &mdash; AI Agent Document Management</div>
   </div>
   <div class="header-right">
     <button id="new-chat-btn" onclick="newChat()">
@@ -531,15 +648,26 @@
 <div id="chat-wrapper">
   <div id="chat">
     <div class="welcome" id="welcome">
-      <div class="welcome-icon">&#x1f4cb;</div>
-      <h2>Your Health Assistant</h2>
-      <p>I can search your health documents and conversation attachments, read files with your consent, and help you find what you need.</p>
+      <div class="welcome-icon-wrapper">
+        <div class="welcome-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="white" stroke="none"><path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"/></svg></div>
+        <span class="welcome-orbit">📋</span>
+        <span class="welcome-orbit">🔍</span>
+        <span class="welcome-orbit">✨</span>
+      </div>
+      <h2>Documents MCP Tools Demo</h2>
+      <p>Search, read, and upload health documents and conversation attachments using MCP tools powered by the AI Agent Orchestrator.</p>
       <div class="suggestions">
+        <div class="suggestion-group-label">All sources</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C1;</div>What documents or files do I have?<span class="suggestion-tag tag-both">Docs + Messages</span></div>
+
+        <div class="suggestion-group-label">Health documents</div>
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C2;</div>What health documents do I have?</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4AC;</div>What files were shared in my conversations?</div>
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C4;</div>Show me my monthly statements</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4CE;</div>Find attachments from my care navigator</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F50D;</div>Read my January 2026 statement and summarize it</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F50D;</div>Read my January 2026 statement and summarize it<span class="suggestion-tag tag-consent">Consent-gated</span></div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4E4;</div>I want to upload a health document</div>
+
+        <div class="suggestion-group-label">Conversation attachments</div>
+        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4AC;</div>What files were shared in my conversations?</div>
         <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F48A;</div>Do I have a medication guide in my messages?</div>
       </div>
     </div>
@@ -551,25 +679,124 @@
 </div>
 
 <div id="input-area">
-  <input type="text" id="msg" placeholder="Ask about your health documents..." autocomplete="off" />
+  <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" style="display:none" />
+  <button id="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach a file">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+  </button>
+  <div id="file-preview">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span class="file-name"></span>
+    <span class="file-size"></span>
+    <button class="file-remove" onclick="clearAttachedFile()" title="Remove file">&times;</button>
+  </div>
+  <input type="text" id="msg" placeholder="Ask about your documents..." autocomplete="off" />
   <button id="send-btn" onclick="send()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
 </div>
 
 <script>
-const SVG_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const SVG_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#01C3A2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const SVG_ERROR = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
 const SVG_DOC = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
 const SVG_DOWNLOAD = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 const SVG_EYE = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_AI = '&#x2728;';
 const ICON_USER = '&#x1f464;';
 
+// Category color palette — known categories get curated colors,
+// unknown categories (e.g. from Contentful) get a consistent hash-picked color.
+const CATEGORY_COLORS = {
+  'statements':      { bg: '#EFF6FF', fg: '#2563EB', border: '#BFDBFE', icon: '\u{1F4C4}' },
+  'statement':       { bg: '#EFF6FF', fg: '#2563EB', border: '#BFDBFE', icon: '\u{1F4C4}' },
+  'bills':           { bg: '#FFF7ED', fg: '#EA580C', border: '#FED7AA', icon: '\u{1F4B3}' },
+  'bill':            { bg: '#FFF7ED', fg: '#EA580C', border: '#FED7AA', icon: '\u{1F4B3}' },
+  'plan_docs':       { bg: '#ECFDF5', fg: '#059669', border: '#A7F3D0', icon: '\u{1F3E5}' },
+  'plan':            { bg: '#ECFDF5', fg: '#059669', border: '#A7F3D0', icon: '\u{1F3E5}' },
+  'plan documents':  { bg: '#ECFDF5', fg: '#059669', border: '#A7F3D0', icon: '\u{1F3E5}' },
+'uploaded_by_me':  { bg: '#EDE8FA', fg: '#501CD2', border: '#C4CFFD', icon: '\u{1F4E4}' },
+'upload':          { bg: '#EDE8FA', fg: '#501CD2', border: '#C4CFFD', icon: '\u{1F4E4}' },
+'my uploads':      { bg: '#EDE8FA', fg: '#501CD2', border: '#C4CFFD', icon: '\u{1F4E4}' },
+  'attachment':      { bg: '#F0FDFA', fg: '#0D9488', border: '#99F6E4', icon: '\u{1F4CE}' },
+  'lab results':     { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA', icon: '\u{1F9EA}' },
+  'lab':             { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA', icon: '\u{1F9EA}' },
+  'forms':           { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A', icon: '\u{1F4CB}' },
+  'form':            { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A', icon: '\u{1F4CB}' },
+  'questionnaire':   { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A', icon: '\u{1F4CB}' },
+  'guides':          { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0', icon: '\u{1F4D7}' },
+  'guide':           { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0', icon: '\u{1F4D7}' },
+  'claims':            { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA', icon: '\u{1F4C3}' },
+  'eob':               { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA', icon: '\u{1F4C3}' },
+  'dental':            { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0', icon: '\u{1F9B7}' },
+  'imaging':           { bg: '#FDF4FF', fg: '#C026D3', border: '#F5D0FE', icon: '\u{1FA7B}' },
+  'xray':              { bg: '#FDF4FF', fg: '#C026D3', border: '#F5D0FE', icon: '\u{1FA7B}' },
+  'prescription':      { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A', icon: '\u{1F48A}' },
+  'rx':                { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A', icon: '\u{1F48A}' },
+  'visit':             { bg: '#EFF6FF', fg: '#2563EB', border: '#BFDBFE', icon: '\u{1FA7A}' },
+  'appointment':       { bg: '#EFF6FF', fg: '#2563EB', border: '#BFDBFE', icon: '\u{1FA7A}' },
+  'message attachment': { bg: '#F0FDFA', fg: '#0D9488', border: '#99F6E4', icon: '\u{1F4CE}' },
+  'message':           { bg: '#F0FDFA', fg: '#0D9488', border: '#99F6E4', icon: '\u{1F4CE}' },
+  'other documents':   { bg: '#F8FAFC', fg: '#475569', border: '#CBD5E1', icon: '\u{1F4C1}' },
+  'other':             { bg: '#F8FAFC', fg: '#475569', border: '#CBD5E1', icon: '\u{1F4C1}' },
+};
+
+const DYNAMIC_PALETTE = [
+  { bg: '#FEF2F2', fg: '#DC2626', border: '#FECACA' },
+  { bg: '#FFFBEB', fg: '#D97706', border: '#FDE68A' },
+  { bg: '#F0FDF4', fg: '#16A34A', border: '#BBF7D0' },
+  { bg: '#EFF6FF', fg: '#2563EB', border: '#BFDBFE' },
+  { bg: '#FDF4FF', fg: '#C026D3', border: '#F5D0FE' },
+  { bg: '#FFF7ED', fg: '#EA580C', border: '#FED7AA' },
+  { bg: '#F0FDFA', fg: '#0D9488', border: '#99F6E4' },
+  { bg: '#FEF3C7', fg: '#B45309', border: '#FDE68A' },
+];
+
+function getCategoryColor(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+  for (const [key, colors] of Object.entries(CATEGORY_COLORS)) {
+    if (lower.includes(key.replace(/_/g, ''))) return colors;
+  }
+  let hash = 0;
+  for (let i = 0; i < lower.length; i++) hash = ((hash << 5) - hash + lower.charCodeAt(i)) | 0;
+  return DYNAMIC_PALETTE[Math.abs(hash) % DYNAMIC_PALETTE.length];
+}
+
+function detectCategory(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+
+  const catMatch = lower.match(/category:\s*([a-z][a-z ]+)/);
+  if (catMatch) return catMatch[1].trim();
+
+  if (lower.includes('statement'))  return 'statement';
+  if (lower.includes('bill') || lower.includes('premium'))  return 'bill';
+  if (lower.includes('plan') || lower.includes('benefits') || lower.includes('formulary') || lower.includes('directory'))  return 'plan';
+  if (lower.includes('lab') || lower.includes('test result'))  return 'lab results';
+  if (lower.includes('eob') || lower.includes('explanation of benefits') || lower.includes('claim'))  return 'claims';
+  if (lower.includes('dental') || lower.includes('cleaning') || lower.includes('orthodont'))  return 'dental';
+  if (lower.includes('x-ray') || lower.includes('xray') || lower.includes('imaging') || lower.includes('mri') || lower.includes('scan'))  return 'imaging';
+  if (lower.includes('prescription') || lower.includes('rx') || lower.includes('medication') || lower.includes('refill'))  return 'prescription';
+  if (lower.includes('questionnaire') || lower.includes('intake') || lower.includes('pre-visit') || lower.includes('form'))  return 'forms';
+  if (lower.includes('guide') || lower.includes('education'))  return 'guide';
+  if (lower.includes('summary') || lower.includes('visit') || lower.includes('appointment'))  return 'visit';
+  if (lower.includes('upload'))  return 'upload';
+  if (lower.includes('attachment') || lower.includes('attach'))  return 'attachment';
+  if (/from:\s/.test(lower))  return 'message attachment';
+  return null;
+}
+
+function isDocumentUrl(url) {
+  return url && (url.includes('/doc-content/') || url.includes('/document-content/') || url.includes('/msg-content/') || url.includes('/messaging-documents/'));
+}
+
 const FRIENDLY_TOOL_NAMES = {
   'get_health_document_filters':  ['Discovering document categories...', 'Found document categories'],
   'search_health_documents':      ['Searching documents...', 'Search complete'],
   'read_document_content':        ['Reading document content...', 'Document read'],
   'get_health_document_link':     ['Getting document link...', 'Link ready'],
+  'get_health_document_configs':  ['Checking upload constraints...', 'Upload constraints ready'],
+  'upload_health_document':       ['Uploading document...', 'Upload complete'],
   'ui_chip_list_card':            ['Preparing quick actions...', 'Actions ready'],
   'render_card':                  ['Rendering results...', 'Results ready'],
   'search_conversation_attachments': ['Searching conversation attachments...', 'Attachments found'],
@@ -583,6 +810,9 @@ const FRIENDLY_TOOL_NAMES = {
 const chat = document.getElementById('chat');
 const msgInput = document.getElementById('msg');
 const sendBtn = document.getElementById('send-btn');
+const attachBtn = document.getElementById('attach-btn');
+const fileInput = document.getElementById('file-input');
+const filePreview = document.getElementById('file-preview');
 const statusEl = document.getElementById('status');
 const welcome = document.getElementById('welcome');
 const scrollBtnEl = document.getElementById('scroll-btn');
@@ -592,6 +822,39 @@ let jwt = null;
 let sending = false;
 let lastFailedMsg = null;
 let isNearBottom = true;
+let attachedFile = null;
+let attachedBase64 = null;
+
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  attachedFile = file;
+  filePreview.querySelector('.file-name').textContent = file.name;
+  filePreview.querySelector('.file-size').textContent = formatFileSize(file.size);
+  filePreview.style.display = 'flex';
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    attachedBase64 = reader.result.split(',')[1];
+  };
+  reader.readAsDataURL(file);
+  msgInput.placeholder = 'Add a message about this file...';
+  msgInput.focus();
+});
+
+function clearAttachedFile() {
+  attachedFile = null;
+  attachedBase64 = null;
+  fileInput.value = '';
+  filePreview.style.display = 'none';
+  msgInput.placeholder = 'Ask about your documents...';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
 
 chat.addEventListener('scroll', () => {
   const threshold = 120;
@@ -640,6 +903,7 @@ async function newChat() {
   chat.appendChild(welcome);
   welcome.style.display = '';
   msgInput.value = '';
+  clearAttachedFile();
   msgInput.focus();
   chat.scrollTop = 0;
   isNearBottom = true;
@@ -647,24 +911,54 @@ async function newChat() {
 }
 
 function sendSuggestion(el) {
-  const icon = el.querySelector('.suggestion-icon');
-  msgInput.value = icon ? el.textContent.replace(icon.textContent, '').trim() : el.textContent.trim();
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('.suggestion-icon, .suggestion-tag').forEach(n => n.remove());
+  msgInput.value = clone.textContent.trim();
   send();
 }
 
 async function send(retryText) {
-  const text = retryText || msgInput.value.trim();
-  if (!text || sending) return;
+  let text = retryText || msgInput.value.trim();
+  const hasFile = attachedFile && attachedBase64 && !retryText;
+
+  if (!text && !hasFile) return;
+  if (sending) return;
   if (!sessionId) await createSession();
 
+  if (!text && hasFile) text = 'Please upload this file as a health document.';
+
+  let messageForAgent = text;
+  let displayMsg = text;
+
+  if (hasFile) {
+    try {
+      const formData = new FormData();
+      formData.append('file', attachedFile);
+      const uploadResp = await fetch('/api/upload-temp', { method: 'POST', body: formData });
+      const uploadData = await uploadResp.json();
+      if (!uploadData.fileId) throw new Error('No fileId returned');
+      const fileMeta = `[Attached file: name="${attachedFile.name}", size=${attachedFile.size} bytes, type="${attachedFile.type || attachedFile.name.split('.').pop()}", fileId="${uploadData.fileId}"]`;
+      messageForAgent = text + '\n\n' + fileMeta;
+      displayMsg = text + ` 📎 ${attachedFile.name} (${formatFileSize(attachedFile.size)})`;
+    } catch (uploadErr) {
+      console.error('File upload failed:', uploadErr);
+      alert('Failed to attach file. Please try again.');
+      return;
+    }
+  }
+
   welcome.style.display = 'none';
-  if (!retryText) addMsg('user', text);
+  if (!retryText) addMsg('user', displayMsg);
   msgInput.value = '';
   sending = true;
   sendBtn.disabled = true;
+  attachBtn.disabled = true;
   msgInput.disabled = true;
   setStatus('thinking', 'Thinking...');
   lastFailedMsg = text;
+
+  const sentFile = hasFile;
+  if (hasFile) clearAttachedFile();
 
   const thinkingEl = addThinking();
   const pendingTools = {};
@@ -672,6 +966,8 @@ async function send(retryText) {
   let agentText = '';
   let lastEventId = null;
   let thinkingRemoved = false;
+  let renderedCardsKey = null;
+  let renderedChipsKey = null;
 
   function removeThinking() {
     if (!thinkingRemoved && thinkingEl.parentNode) { thinkingEl.remove(); thinkingRemoved = true; }
@@ -686,7 +982,7 @@ async function send(retryText) {
         'User-Agent': 'Local-CLI',
         'X-Skip-Guardrails': 'true'
       },
-      body: JSON.stringify({ id: crypto.randomUUID(), session_id: sessionId, message: text })
+      body: JSON.stringify({ id: crypto.randomUUID(), session_id: sessionId, message: messageForAgent })
     });
 
     const reader = r.body.getReader();
@@ -738,12 +1034,29 @@ async function send(retryText) {
           }
           if (part.function_response) {
             const id = part.function_response.id || part.function_response.name;
+            console.log('[TOOL RESPONSE]', id, JSON.stringify(part.function_response, null, 2));
             if (pendingTools[id]) {
               let summary = '';
               const resp = part.function_response.response;
-              if (resp && resp.result && resp.result.content) {
-                for (const c of resp.result.content) {
-                  if (c.text) { summary = c.text; break; }
+              if (resp) {
+                // Try nested MCP format: resp.result.content[].text
+                if (resp.result && resp.result.content) {
+                  for (const c of resp.result.content) {
+                    if (c.text) { summary = c.text; break; }
+                  }
+                }
+                // Try flat content array: resp.content[].text
+                if (!summary && resp.content) {
+                  for (const c of resp.content) {
+                    if (c.text) { summary = c.text; break; }
+                  }
+                }
+                // Try direct text field
+                if (!summary && typeof resp === 'string') { summary = resp; }
+                // Try stringified response as last resort
+                if (!summary && typeof resp === 'object') {
+                  const text = resp.text || resp.message || resp.summary;
+                  if (text) summary = text;
                 }
               }
               markToolDone(pendingTools[id], summary);
@@ -757,8 +1070,12 @@ async function send(retryText) {
             scrollDown();
           }
           if (part.cards && part.cards.length) {
-            removeThinking();
-            addCards(part.cards);
+            const key = JSON.stringify(part.cards);
+            if (key !== renderedCardsKey) {
+              removeThinking();
+              renderedCardsKey = key;
+              addCards(part.cards);
+            }
             for (const id in pendingTools) {
               if (pendingTools[id].getAttribute('data-raw-name').includes('render_card') && !pendingTools[id].classList.contains('done')) {
                 markToolDone(pendingTools[id]);
@@ -766,8 +1083,12 @@ async function send(retryText) {
             }
           }
           if (part.chips && part.chips.length) {
-            removeThinking();
-            addChips(part.chips);
+            const key = JSON.stringify(part.chips);
+            if (key !== renderedChipsKey) {
+              removeThinking();
+              renderedChipsKey = key;
+              addChips(part.chips);
+            }
             for (const id in pendingTools) {
               if (pendingTools[id].getAttribute('data-raw-name').includes('render_chips') && !pendingTools[id].classList.contains('done')) {
                 markToolDone(pendingTools[id]);
@@ -790,6 +1111,7 @@ async function send(retryText) {
 
   sending = false;
   sendBtn.disabled = false;
+  attachBtn.disabled = false;
   msgInput.disabled = false;
   setStatus('connected', 'Connected');
   msgInput.focus();
@@ -797,9 +1119,10 @@ async function send(retryText) {
 }
 
 function markToolDone(el, summary) {
-  el.classList.add('done');
+  const isError = summary && /\berror\b/i.test(summary);
+  el.classList.add(isError ? 'error' : 'done');
   const iconEl = el.querySelector('.tool-icon');
-  if (iconEl) iconEl.innerHTML = SVG_CHECK;
+  if (iconEl) iconEl.innerHTML = isError ? SVG_ERROR : SVG_CHECK;
   const lbl = el.querySelector('.tool-status');
   if (lbl) {
     let doneText = 'Done';
@@ -814,17 +1137,25 @@ function markToolDone(el, summary) {
     const raw = el.getAttribute('data-raw-name') || '';
     const clean = cleanToolName(raw);
     const pair = FRIENDLY_TOOL_NAMES[clean];
-    labelEl.textContent = pair ? pair[1] : clean;
+    if (isError) {
+      labelEl.textContent = (pair ? pair[1] : clean) + ' failed';
+    } else {
+      labelEl.textContent = pair ? pair[1] : clean;
+    }
   }
   if (summary) {
+    let displaySummary = summary;
+    const respondIdx = displaySummary.indexOf('\nRESPOND:');
+    if (respondIdx > 0) displaySummary = displaySummary.substring(0, respondIdx).trim();
+    displaySummary = displaySummary.replace(/^DATA:\s*/i, '');
     const argsEl = el.querySelector('.tool-args');
-    if (argsEl) { argsEl.textContent = summary; }
+    if (argsEl) { argsEl.textContent = displaySummary; }
     else {
       const infoEl = el.querySelector('.tool-info');
       if (infoEl) {
         const s = document.createElement('div');
         s.className = 'tool-args';
-        s.textContent = summary;
+        s.textContent = displaySummary;
         infoEl.appendChild(s);
       }
     }
@@ -844,7 +1175,7 @@ function addMsg(role, text) {
 
   const meta = document.createElement('div');
   meta.className = 'msg-meta';
-  meta.innerHTML = '<span class="sender">' + (role === 'agent' ? 'AI Assistant' : 'You') + '</span><span class="timestamp">' + now() + '</span>';
+  meta.innerHTML = '<span class="sender">' + (role === 'agent' ? 'League Assistant' : 'You') + '</span><span class="timestamp">' + now() + '</span>';
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
@@ -914,11 +1245,23 @@ function addCards(cards) {
   for (const card of cards) {
     const el = document.createElement('div');
     el.className = 'card';
+
+    const cat = detectCategory(card.body || '') || detectCategory(card.title || '');
+    const catColor = getCategoryColor(cat || card.title || '');
+    if (catColor) {
+      el.style.borderLeft = '3px solid ' + catColor.fg;
+    }
+
     let html = '';
+    if (cat && catColor) {
+      html += '<div class="card-category" style="background:' + catColor.bg + ';color:' + catColor.fg + ';">'
+        + (catColor.icon || '') + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</div>';
+    }
     if (card.title) html += '<div class="card-title">' + SVG_DOC + ' ' + esc(card.title) + '</div>';
     if (card.body) html += '<div class="card-body">' + renderMarkdown(card.body) + '</div>';
     if (card.buttons && card.buttons.length) {
       html += '<div class="card-buttons">';
+      const seenUrls = new Set();
       for (const btn of card.buttons) {
         let url = btn.value || '';
         const ccDocMatch = url.match(/\/v1\/document-content\/([^?&/]+)/) || url.match(/documentId=([^?&]+)/);
@@ -933,10 +1276,21 @@ function addCards(cards) {
         if (isAttachId) {
           url = '/msg-content/' + url;
         }
-        const isUrl = url.startsWith('http') || url.startsWith('/');
-        if (isUrl) {
-          html += '<a class="card-btn" href="' + esc(url) + '" target="_blank">' + SVG_EYE + ' View</a>';
-          html += '<a class="card-btn" href="' + esc(url) + '" download>' + SVG_DOWNLOAD + ' Download</a>';
+        const isUrlValue = url.startsWith('http') || url.startsWith('/');
+        if (isUrlValue) {
+          if (isDocumentUrl(url) && !seenUrls.has(url)) {
+            seenUrls.add(url);
+            html += '<a class="card-btn btn-view" href="' + esc(url) + '" target="_blank">' + SVG_EYE + ' View</a>';
+            html += '<a class="card-btn btn-download" href="' + esc(url) + '" download>' + SVG_DOWNLOAD + ' Download</a>';
+          } else if (!seenUrls.has(url)) {
+            seenUrls.add(url);
+            const lbl = (btn.label || '').toLowerCase();
+            if (lbl.includes('download')) {
+              html += '<a class="card-btn btn-download" href="' + esc(url) + '" download>' + SVG_DOWNLOAD + ' Download</a>';
+            } else {
+              html += '<a class="card-btn" href="' + esc(url) + '" target="_blank">' + esc(btn.label) + '</a>';
+            }
+          }
         } else {
           html += '<span class="card-btn" onclick="sendSuggestion(this)">' + esc(btn.label) + '</span>';
         }
@@ -956,8 +1310,17 @@ function addChips(chips) {
   for (const chip of chips) {
     const el = document.createElement('span');
     el.className = 'chip';
-    el.textContent = chip.label || chip.value || '?';
-    el.onclick = () => { msgInput.value = chip.label || chip.value; send(); };
+    const label = chip.label || chip.value || '?';
+    el.textContent = label;
+
+    const color = getCategoryColor(label);
+    if (color) {
+      el.style.background = color.bg;
+      el.style.color = color.fg;
+      el.style.borderColor = color.border;
+    }
+
+    el.onclick = () => { msgInput.value = label; send(); };
     container.appendChild(el);
   }
   chat.appendChild(container);

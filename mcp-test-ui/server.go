@@ -11,7 +11,8 @@ import (
 //go:embed index.html
 var content embed.FS
 
-const mcpTarget = "http://localhost:18006"
+const ccMcpTarget = "http://localhost:18006"
+const msgMcpTarget = "http://localhost:18005"
 const mockTarget = "http://localhost:8092"
 
 func proxyTo(target string, path string) http.HandlerFunc {
@@ -51,13 +52,15 @@ func proxyTo(target string, path string) http.HandlerFunc {
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/mcp", proxyTo(mcpTarget, "/mcp"))
+	mux.HandleFunc("/mcp/cc", proxyTo(ccMcpTarget, "/mcp"))
+	mux.HandleFunc("/mcp/msg", proxyTo(msgMcpTarget, "/mcp"))
 	mux.HandleFunc("/doc-content", proxyTo(mockTarget, "/v1/documents/content"))
 
 	mux.Handle("/", http.FileServer(http.FS(content)))
 
 	port := 8091
-	fmt.Printf("MCP Test UI: http://localhost:%d\n", port)
-	fmt.Printf("Proxying /mcp to %s/mcp\n", mcpTarget)
+	fmt.Printf("MCP Test UI:  http://localhost:%d\n", port)
+	fmt.Printf("Proxying /mcp/cc  → %s/mcp (Documents)\n", ccMcpTarget)
+	fmt.Printf("Proxying /mcp/msg → %s/mcp (Messaging)\n", msgMcpTarget)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), mux))
 }

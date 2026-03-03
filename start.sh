@@ -3,11 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICES_DIR="$HOME/GoProjects/services"
+SERVICES_EL="$SERVICES_DIR/src/el"
 AOR_DIR="$HOME/GoProjects/agent-orchestrator"
 MOCK_DIR="$SCRIPT_DIR/demo-mock-server"
-MCP_DIR="$SERVICES_DIR/src/el/apps/connected_care/local_mcp_server"
-MSG_MCP_DIR="$SERVICES_DIR/src/el/apps/messaging/local_mcp_server"
+MCP_DIR="$SERVICES_EL/apps/connected_care/local_mcp_server"
+MSG_MCP_DIR="$SERVICES_EL/apps/messaging/local_mcp_server"
 CHAT_UI_DIR="$SCRIPT_DIR/chat-ui"
+MCP_TEST_UI_DIR="$SCRIPT_DIR/mcp-test-ui"
 VENV="$AOR_DIR/.hackathon-venv"
 
 PIDS_TO_KILL=()
@@ -24,48 +26,49 @@ cleanup() {
 }
 trap cleanup EXIT
 
+kill_port() {
+  local port=$1
+  local pids
+  pids=$(lsof -ti :"$port" 2>/dev/null || true)
+  if [[ -n "$pids" ]]; then
+    echo "$pids" | xargs kill -9 2>/dev/null || true
+    sleep 1
+  fi
+}
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Hackathon Agent Documents — Full Stack Launcher"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# 1. Mock server
-if lsof -ti :8092 > /dev/null 2>&1; then
-  echo "[OK] Mock server already running on :8092"
-else
-  echo "[..] Starting mock server on :8092..."
-  if [[ ! -f "$MOCK_DIR/demo-mock-server" ]]; then
-    (cd "$MOCK_DIR" && CGO_ENABLED=0 go build -o demo-mock-server .)
-  fi
-  "$MOCK_DIR/demo-mock-server" &
-  PIDS_TO_KILL+=($!)
-  sleep 1
-  echo "[OK] Mock server started"
-fi
+# ── 1. Mock extension server (:8092) ──
+echo "[..] Rebuilding mock server..."
+kill_port 8092
+(cd "$MOCK_DIR" && go build -o demo-mock-server .)
+"$MOCK_DIR/demo-mock-server" &
+PIDS_TO_KILL+=($!)
+sleep 1
+echo "[OK] Mock server on :8092"
 
-# 2. MCP server
-if lsof -ti :18006 > /dev/null 2>&1; then
-  echo "[OK] MCP server already running on :18006"
-else
-  echo "[..] Starting MCP server on :18006..."
-  (cd "$MCP_DIR" && CGO_ENABLED=0 go build -o local-mcp-server . && ./local-mcp-server) &
-  PIDS_TO_KILL+=($!)
-  sleep 2
-  echo "[OK] MCP server started"
-fi
+# ── 2. Documents MCP server (:18006) ──
+echo "[..] Rebuilding Documents MCP server..."
+kill_port 18006
+(cd "$SERVICES_EL" && go build -o "$MCP_DIR/local-mcp-server" ./apps/connected_care/local_mcp_server/)
+(cd "$MCP_DIR" && ./local-mcp-server) &
+PIDS_TO_KILL+=($!)
+sleep 2
+echo "[OK] Documents MCP server on :18006"
 
-# 3. Messaging MCP server
-if lsof -ti :18005 > /dev/null 2>&1; then
-  echo "[OK] Messaging MCP server already running on :18005"
-else
-  echo "[..] Starting Messaging MCP server on :18005..."
-  (cd "$MSG_MCP_DIR" && CGO_ENABLED=0 go build -o local-messaging-mcp . && ./local-messaging-mcp) &
-  PIDS_TO_KILL+=($!)
-  sleep 2
-  echo "[OK] Messaging MCP server started"
-fi
+# ── 3. Messaging MCP server (:18005) ──
+echo "[..] Rebuilding Messaging MCP server..."
+kill_port 18005
+(cd "$SERVICES_EL" && go build -o "$MSG_MCP_DIR/local-mcp-server" ./apps/messaging/local_mcp_server/)
+(cd "$MSG_MCP_DIR" && ./local-mcp-server) &
+PIDS_TO_KILL+=($!)
+sleep 2
+echo "[OK] Messaging MCP server on :18005"
 
-# 4. AOR containers (renumbered)
+# ── 4. AOR containers ──
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q agent-orchestrator-agent-orchestrator; then
   echo "[OK] AOR containers already running"
 else
@@ -88,19 +91,23 @@ else
   exit 1
 fi
 
-# 5. Chat UI
-if lsof -ti :8093 > /dev/null 2>&1; then
-  echo "[OK] Chat UI already running on :8093"
-else
-  echo "[..] Starting Chat UI on :8093..."
-  if [[ ! -f "$CHAT_UI_DIR/chat-ui-server" ]]; then
-    (cd "$CHAT_UI_DIR" && CGO_ENABLED=0 go build -o chat-ui-server .)
-  fi
-  "$CHAT_UI_DIR/chat-ui-server" &
-  PIDS_TO_KILL+=($!)
-  sleep 1
-  echo "[OK] Chat UI started"
-fi
+# ── 5. Chat UI (:8093) ──
+echo "[..] Rebuilding Chat UI..."
+kill_port 8093
+(cd "$CHAT_UI_DIR" && go build -o chat-ui-server .)
+"$CHAT_UI_DIR/chat-ui-server" &
+PIDS_TO_KILL+=($!)
+sleep 1
+echo "[OK] Chat UI on :8093"
+
+# ── 6. MCP Test UI (:8091) ──
+echo "[..] Rebuilding MCP Test UI..."
+kill_port 8091
+(cd "$MCP_TEST_UI_DIR" && go build -o mcp-test-ui .)
+"$MCP_TEST_UI_DIR/mcp-test-ui" &
+PIDS_TO_KILL+=($!)
+sleep 1
+echo "[OK] MCP Test UI on :8091"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -119,11 +126,6 @@ echo "  Terminal chat:"
 echo "    $VENV/bin/python $SCRIPT_DIR/chat.py"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-if [[ ${#PIDS_TO_KILL[@]} -gt 0 ]]; then
-  echo "Press Ctrl+C to stop local servers."
-  echo ""
-  wait
-else
-  echo "All services were already running. Open the Chat UI and go!"
-  echo ""
-fi
+echo "Press Ctrl+C to stop local servers."
+echo ""
+wait

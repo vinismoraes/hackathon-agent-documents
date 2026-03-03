@@ -154,6 +154,8 @@ sequenceDiagram
 | **GuardedConversation** | Skipped via `X-Skip-Guardrails` + `Local-CLI` UA | Active — safety/escalation service validates all messages | Escalation service not available locally |
 | **MCP Auth** | `WithNoAuth()` on all tools | Should use `WithAuth()` + token forwarding from AOR | No real user context in demo |
 | **API Hostname** | Hardcoded `api.league.com` / `localhost:5400` | From service config / environment | No real API gateway locally |
+| **Document Upload Configs** | `PlatformDefaultsProvider` (hardcoded 20MB, 10 docs) | `TenantDocumentsConfigV2` from kubernetes-configs ConfigMaps, per-tenant per-document-type | No access to k8s ConfigMaps locally |
+| **Document Upload** | Temp file store (HTTP) → `extensionsClient.PostDocuments` (mock) | Chathub attachments → `UploadDocumentV2` → GCS → Pub/Sub → event_router → AV → tenant | No GCS, Pub/Sub, ClamAV locally |
 
 ---
 
@@ -166,7 +168,76 @@ sequenceDiagram
 - [ ] **Ensure user-scoped data access** — `IMessagingService.GetThreads()` must only return threads belonging to the authenticated user (already the case in production since the service extracts user ID from the request context)
 - [ ] **Verify AOR forwards auth tokens** to MCP servers correctly (currently handled by `MCP_AUTH_CREDENTIAL` / `MCP_AUTH_SCHEME` in the toolset)
 
-### 2. Connected Care: Remove Mock Bypass
+### 2. Document Upload Configs: Wire Real Config Provider
+
+- [ ] **Replace `PlatformDefaultsProvider`** in `get_health_document_configs` with a provider that reads from `config.TenantDocumentsConfigV2` (sourced from kubernetes-configs ConfigMaps)
+- [ ] **Inject via Wire** — the provider should receive `TenantDocumentsConfigV2` and `PlatformLimits` as dependencies, matching how `server_impl.go` uses `getUploadSize()`, `getMaxFiles()`, and `constructValidMimes()`
+- [ ] **Per-tenant, per-document-type** — production configs vary by tenant and document type (e.g., "document" vs "upload_on_behalf"). The tool should accept an optional `documentType` parameter or return the default config.
+
+### 3. Document Upload: Wire Into Real Upload Pipeline
+
+The `upload_health_document` tool accepts file bytes (via a temp file store in the demo) and forwards them to the extension backend via `extensionsClient.PostDocuments`. In production, the file bytes should flow through the real GCS → Pub/Sub → event_router pipeline.
+
+#### Demo Flow (Hackathon)
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant UI as Chat UI
+    participant Store as Temp File Store
+    participant AOR as Agent Orchestrator
+    participant MCP as upload_health_document
+    participant Mock as Mock Extension
+
+    User->>UI: Attach file + send message
+    UI->>Store: POST /api/upload-temp (multipart)
+    Store-->>UI: fileId
+    UI->>AOR: message + [fileId, name, size, type]
+    AOR->>MCP: upload_health_document(fileId, ...)
+    MCP->>Store: GET /api/upload-temp/{fileId}
+    Store-->>MCP: file bytes
+    MCP->>Mock: PostDocuments(content, docType)
+    Mock-->>MCP: documentId
+    MCP-->>AOR: success, doc-upload-001
+    AOR-->>UI: "Your file has been uploaded!"
+```
+
+#### Production Flow
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant Chat as Chathub
+    participant MCP as upload_health_document
+    participant CC as Connected Care
+    participant GCS as Google Cloud Storage
+    participant PS as Cloud Pub/Sub
+    participant ER as Event Router
+    participant AV as ClamAV
+    participant Ext as Tenant Extension
+
+    User->>Chat: Attach file in chat
+    Chat->>MCP: upload_health_document(fileBytes, ...)
+    MCP->>CC: DocumentManagementService.UploadDocumentV2
+    CC->>GCS: writeBytesToGCS(data, bucket)
+    GCS->>PS: ObjectFinalizeEvent
+    PS->>ER: ProcessAVScansHandler
+    ER->>AV: scan(fileBytes)
+    AV-->>ER: clean
+    ER->>Ext: PostDocuments(content, docType)
+    Ext-->>ER: 200 OK
+    ER-->>MCP: document stored
+    MCP-->>Chat: success + documentId
+```
+
+Production checklist:
+- [ ] **Config provider** reads from `TenantDocumentsConfigV2` (kubernetes-configs) for per-tenant limits
+- [ ] **File source** — replace temp file store with Chathub's attachment infrastructure (file bytes from chat attachment storage, not HTTP temp store)
+- [ ] **Upload service** — call `DocumentManagementService.UploadDocumentV2` instead of `extensionsClient.PostDocuments` directly, so the file goes through GCS → Pub/Sub → event_router → AV scan → tenant
+- [ ] **Auth** — use real user context from JWT to set `CreatorUserId` and `MemberId` on the content reference
+- [ ] **Async confirmation** — production upload is async (GCS → Pub/Sub pipeline). Tool should return "upload initiated" and optionally subscribe to document status updates
+
+### 4. Connected Care: Remove Mock Bypass
 
 - [ ] **Remove `local_mcp_server` binary** — or keep it for dev/test only (already flagged with `// HACKATHON`)
 - [ ] **Remove `directExtensionsCaller`** — production uses the real `ExtensionsCaller` via Wire injection
@@ -187,6 +258,18 @@ sequenceDiagram
 - [ ] **Update URLs** to use internal Kubernetes service names (e.g., `http://connected-care:18006/mcp`)
 - [ ] **Remove `ConciergeMessagingMcpToolset`** file if messaging tools ship under the existing `ConciergeUIMcpToolset` (since they share the same MCP server in production)
 - [ ] **Remove `X-Skip-Guardrails` bypass** — let GuardedConversation run normally
+
+#### ⚠️ Demo-Only Changes to `concierge_agent/root.yaml`
+
+The following changes were made to `apps/agent-orchestrator/src/agents/concierge_agent/root.yaml` **for the hackathon demo only**. All three are marked with `{# HACKATHON DEMO #}` comments in the file for easy identification and reversal.
+
+| Change | Location | What to do for production |
+|--------|----------|---------------------------|
+| Added "direct document management capabilities..." sentence | Opening instruction (line ~10) | Remove — the LLM discovers capabilities from registered tools |
+| Added "document search, reading, upload... ARE supported" note | Unsupported Requests bullet (line ~67) | Revert to original: `"Anything outside your capabilities."` |
+| Added entire "Health Documents & File Management" section | New section before Final Notes (lines ~117-126) | Remove — or replace with a production-appropriate version once tools are officially registered |
+
+**Why these were needed for demo:** Without the MCP tools being registered in a tenant toolset registry (which doesn't exist locally), the LLM had no awareness of document capabilities and would escalate or refuse requests. These prompt additions force the behavior for demo purposes. In production, proper tool registration + tool descriptions should be sufficient.
 
 ### 5. Privacy & Consent
 
@@ -269,10 +352,12 @@ apps/messaging/local_mcp_server/main.go          ← demo binary
 ### New Files (Production Code)
 ```
 connected_care/mcp/mcp_server.go                 ← CC MCP server
+connected_care/mcp/tools/get_health_document_configs/
 connected_care/mcp/tools/get_health_document_filters/
 connected_care/mcp/tools/search_health_documents/
 connected_care/mcp/tools/get_health_document_link/
 connected_care/mcp/tools/read_document_content/
+connected_care/mcp/tools/upload_health_document/
 messaging/chathub/mcp/doc_tools/search_conversation_attachments/
 messaging/chathub/mcp/doc_tools/get_attachment_link/
 ```

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
 
 const port = 8092
@@ -111,6 +114,17 @@ var statementDocs = []map[string]any{
 			"actions":      []string{"view", "download"},
 		},
 	},
+	{
+		"id":   "doc-stmt-004",
+		"type": "document",
+		"attributes": map[string]any{
+			"title":        "October 2025 Monthly Statement",
+			"fileType":     "pdf",
+			"createdDate":  "2025-10-31T00:00:00Z",
+			"modifiedDate": "2025-10-31T00:00:00Z",
+			"actions":      []string{"view", "download"},
+		},
+	},
 }
 
 var billDocs = []map[string]any{
@@ -133,6 +147,17 @@ var billDocs = []map[string]any{
 			"fileType":     "pdf",
 			"createdDate":  "2026-01-01T00:00:00Z",
 			"modifiedDate": "2026-01-01T00:00:00Z",
+			"actions":      []string{"view", "download"},
+		},
+	},
+	{
+		"id":   "doc-bill-003",
+		"type": "document",
+		"attributes": map[string]any{
+			"title":        "December 2025 Premium Bill",
+			"fileType":     "pdf",
+			"createdDate":  "2025-12-01T00:00:00Z",
+			"modifiedDate": "2025-12-01T00:00:00Z",
 			"actions":      []string{"view", "download"},
 		},
 	},
@@ -161,15 +186,34 @@ var planDocs = []map[string]any{
 			"actions":      []string{"view", "download"},
 		},
 	},
+	{
+		"id":   "doc-plan-003",
+		"type": "document",
+		"attributes": map[string]any{
+			"title":        "Provider Network Directory 2026",
+			"fileType":     "pdf",
+			"createdDate":  "2026-01-01T00:00:00Z",
+			"modifiedDate": "2026-01-01T00:00:00Z",
+			"actions":      []string{"view", "download"},
+		},
+	},
 }
 
-var allDocs = func() []map[string]any {
+var (
+	uploadedDocs []map[string]any
+	mu           sync.RWMutex
+)
+
+func getAllDocs() []map[string]any {
+	mu.RLock()
+	defer mu.RUnlock()
 	var all []map[string]any
 	all = append(all, statementDocs...)
 	all = append(all, billDocs...)
 	all = append(all, planDocs...)
+	all = append(all, uploadedDocs...)
 	return all
-}()
+}
 
 // --- Document content (the "wow" moment data) ---
 
@@ -287,6 +331,102 @@ Premium Breakdown:
 
 Payment Status: PAID (January 12, 2026)
 `,
+	"doc-stmt-003": `
+HEALTH PLAN MONTHLY STATEMENT
+==============================
+Statement Period: November 1 - November 30, 2025
+Member: Jane Doe
+Member ID: HM-12345678
+Plan: Gold PPO Health Plan
+
+CLAIMS SUMMARY
+--------------
+
+1. Physical Therapy - Shoulder Rehabilitation
+   Date of Service: November 8, 2025
+   Provider: Peak Physical Therapy
+   Billed Amount:    $180.00
+   Plan Discount:    -$60.00
+   Plan Paid:        -$80.00
+   YOUR COPAY:       $40.00
+
+2. Office Visit - Primary Care Follow-up
+   Date of Service: November 22, 2025
+   Provider: Dr. Sarah Smith, Family Medicine
+   Facility: Lakewood Medical Center
+   Billed Amount:    $150.00
+   Plan Discount:    -$75.00
+   Plan Paid:        -$50.00
+   YOUR COPAY:       $25.00
+
+MONTHLY TOTALS
+--------------
+Total Billed:       $330.00
+Plan Discounts:     -$135.00
+Plan Paid:          -$130.00
+YOUR TOTAL:         $65.00
+`,
+	"doc-stmt-004": `
+HEALTH PLAN MONTHLY STATEMENT
+==============================
+Statement Period: October 1 - October 31, 2025
+Member: Jane Doe
+Member ID: HM-12345678
+Plan: Gold PPO Health Plan
+
+CLAIMS SUMMARY
+--------------
+
+1. Urgent Care Visit
+   Date of Service: October 3, 2025
+   Provider: MinuteClinic
+   Facility: CVS MinuteClinic #8821
+   Billed Amount:    $195.00
+   Plan Discount:    -$70.00
+   Plan Paid:        -$50.00
+   YOUR COPAY:       $75.00
+
+2. Prescription - Amoxicillin 500mg (10-day supply)
+   Date of Service: October 3, 2025
+   Pharmacy: CVS Pharmacy #4521
+   Retail Price:     $25.00
+   Plan Paid:        -$15.00
+   YOUR COPAY:       $10.00
+
+3. Laboratory Services - Flu Test
+   Date of Service: October 3, 2025
+   Provider: MinuteClinic Lab
+   Billed Amount:    $85.00
+   Plan Discount:    -$42.50
+   Plan Paid:        -$42.50
+   YOUR COST:        $0.00
+
+MONTHLY TOTALS
+--------------
+Total Billed:       $305.00
+Plan Discounts:     -$112.50
+Plan Paid:          -$107.50
+YOUR TOTAL:         $85.00
+`,
+	"doc-bill-003": `
+PREMIUM BILL
+=============
+Billing Period: December 2025
+Due Date: December 15, 2025
+Member: Jane Doe
+Member ID: HM-12345678
+
+Plan: Gold PPO Health Plan
+
+Premium Breakdown:
+  Medical:    $425.00
+  Dental:     $45.00
+  Vision:     $15.00
+  -------------------
+  TOTAL DUE:  $485.00
+
+Payment Status: PAID (December 10, 2025)
+`,
 	"doc-plan-001": `
 2026 HEALTH PLAN SUMMARY OF BENEFITS
 =====================================
@@ -305,6 +445,116 @@ KEY BENEFITS:
 - Brand Rx Copay: $35
 - Preventive Care: $0 (fully covered)
 `,
+	"doc-plan-002": `
+PRESCRIPTION DRUG FORMULARY 2026
+==================================
+Plan: Gold PPO Health Plan
+Effective: January 1, 2026
+
+TIER 1 — GENERIC (Copay: $10)
+  Lisinopril, Metformin, Amlodipine, Omeprazole,
+  Amoxicillin, Atorvastatin, Levothyroxine, Losartan
+
+TIER 2 — PREFERRED BRAND (Copay: $35)
+  Eliquis, Jardiance, Ozempic, Xarelto, Humira
+
+TIER 3 — NON-PREFERRED BRAND (Copay: $60)
+  Entresto, Stelara, Dupixent, Skyrizi
+
+TIER 4 — SPECIALTY (Copay: 20%, max $250)
+  Keytruda, Opdivo, Revlimid
+
+NOTES:
+- Prior authorization required for Tier 3 and Tier 4
+- Mail-order 90-day supply: 2.5x copay
+- Step therapy applies to select medications
+`,
+	"doc-plan-003": `
+PROVIDER NETWORK DIRECTORY 2026
+=================================
+Plan: Gold PPO Health Plan
+Effective: January 1, 2026
+
+PRIMARY CARE PHYSICIANS:
+  Dr. Sarah Smith, Family Medicine — Lakewood Medical Center
+  Dr. James Wilson, Internal Medicine — Riverside Health Group
+  Dr. Maria Garcia, Family Medicine — Community Care Clinic
+
+SPECIALISTS:
+  Dr. Michael Chen, Dermatology — Downtown Dermatology Associates
+  Dr. Lisa Park, Cardiology — Heart Care Specialists
+  Dr. Robert Kim, Orthopedics — Orthopedic Sports Medicine Center
+
+URGENT CARE:
+  MinuteClinic (CVS locations) — In-network
+  MedExpress Urgent Care — In-network
+
+HOSPITALS:
+  Lakewood Regional Medical Center — In-network
+  St. Mary's Hospital — In-network
+  University Health System — In-network
+
+LABS:
+  Quest Diagnostics — In-network (preferred)
+  LabCorp — In-network
+
+For a complete provider directory, visit www.example-healthplan.com/providers
+`,
+}
+
+var uploadCounter int
+
+func handleUpload(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	json.NewDecoder(r.Body).Decode(&body)
+
+	uploadCounter++
+	docID := fmt.Sprintf("doc-upload-%03d", uploadCounter)
+
+	fileName := "uploaded-document"
+	fileType := "pdf"
+	var contentText string
+
+	if docs, ok := body["documents"].([]any); ok && len(docs) > 0 {
+		if doc, ok := docs[0].(map[string]any); ok {
+			if fn, ok := doc["fileName"].(string); ok {
+				fileName = fn
+			}
+			if ft, ok := doc["fileType"].(string); ok {
+				fileType = ft
+			}
+			if contentB64, ok := doc["content"].(string); ok {
+				if decoded, err := base64.StdEncoding.DecodeString(contentB64); err == nil {
+					contentText = string(decoded)
+				}
+			}
+		}
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	newDoc := map[string]any{
+		"id":   docID,
+		"type": "document",
+		"attributes": map[string]any{
+			"title":        fileName,
+			"fileType":     fileType,
+			"createdDate":  now,
+			"modifiedDate": now,
+			"actions":      []string{"view", "download"},
+		},
+	}
+
+	mu.Lock()
+	uploadedDocs = append(uploadedDocs, newDoc)
+	if contentText == "" {
+		contentText = fmt.Sprintf("Uploaded document: %s\n(Content uploaded via chat on %s)", fileName, now)
+	}
+	documentContents[docID] = contentText
+	mu.Unlock()
+
+	log.Printf("[MOCK] POST /v1/documents (upload) → %s (%s) — now searchable under 'uploaded_by_me' and all docs", docID, fileName)
+
+	writeJSON(w, http.StatusAccepted, map[string]any{"data": []map[string]any{newDoc}})
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
@@ -342,8 +592,12 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 		docs = billDocs
 	case "plan_docs":
 		docs = planDocs
+	case "uploaded_by_me":
+		mu.RLock()
+		docs = uploadedDocs
+		mu.RUnlock()
 	default:
-		docs = allDocs
+		docs = getAllDocs()
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -404,8 +658,7 @@ func handleDocuments(w http.ResponseWriter, r *http.Request) {
 	case path == "/v1/documents/content":
 		handleContent(w, r)
 	case path == "/v1/documents" && r.Method == http.MethodPost:
-		log.Printf("[MOCK] POST /v1/documents (upload)")
-		writeJSON(w, http.StatusAccepted, map[string]any{"data": statementDocs[:1]})
+		handleUpload(w, r)
 	case path == "/v1/documents" && r.Method == http.MethodDelete:
 		log.Printf("[MOCK] DELETE /v1/documents")
 		w.WriteHeader(http.StatusNoContent)
