@@ -922,14 +922,18 @@ pattern applies to every domain -- benefits, health, care team, claims.
    - ChatHub team: nothing (already connected to AOR; new tools are
      available to all ChatHub users the moment they deploy)
 
-6. **Extensibility template** -- This creates a replicable pattern. Any team
-   that owns a backend service can follow the same steps to expose their
-   domain to the AI agent. The connected_care MCP server becomes the
-   reference implementation alongside the existing messaging, health, and
-   benefits MCP servers.
+6. **Joining an existing movement, not starting one** -- Health and Benefits
+   teams already have MCP tools deployed (`get_benefits`, `get_coverages`,
+   `search_journey_content`, `health_program_recommender`, and more).
+   Connected Care is the missing piece. Adding document tools completes
+   the picture and enables cross-domain conversations where the agent
+   combines documents + benefits + health in a single response.
 
 **Technical talking points for engineers:**
 
+- "Health and Benefits already have MCP tools. Connected Care is the gap.
+  Adding documents means the agent can now combine all three domains in
+  one conversation -- no coordination between teams needed."
 - "ChatHub already talks to AOR. My MCP tools are registered in AOR. The
   moment these deploy, every ChatHub user gets document intelligence --
   zero ChatHub code changes, zero frontend changes."
