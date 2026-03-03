@@ -138,7 +138,8 @@ tool_filter = []
 > "I gave our AI agent the ability to help users find their documents --
 > whether they're health documents (statements, bills) or files shared
 > in conversations -- all through a single chat experience.
-> And I did it without exposing any document contents to the LLM."
+> Metadata stays private by default. Content is only read with explicit
+> user consent."
 
 ### Privacy-First Design Principle
 
@@ -433,7 +434,7 @@ sequenceDiagram
     CC_MCP-->>AOR: download URL
     AOR-->>User: "Here's your January 2026 statement: [download link]"
 
-    Note over User,AOR: User clicks link → downloads directly from backend<br/>Document bytes NEVER pass through LLM
+    Note over User,AOR: User clicks link → downloads directly from backend<br/>Tier 1-2: document bytes never pass through LLM<br/>Tier 3: content sent to LLM only with user consent
 ```
 
 ### Implementation Approach
@@ -758,7 +759,7 @@ flowchart LR
 - `DocumentContentMock(id)` -- document content bytes (for Tier 3)
 
 **NOTE:** The built-in mock data is likely too generic for a compelling demo.
-Use the standalone demo mock server (see `hackathon-demo-mock/` in repo root)
+Use the standalone demo mock server (see `demo-mock-server/` in repo root)
 which returns rich, realistic data designed for the demo story.
 See "Demo Mock Server" section below.
 
@@ -783,8 +784,8 @@ flowchart TD
 > "Users have documents in two places: health documents in Connected Care
 > (statements, bills, plan docs) and file attachments in messaging threads.
 > Today, finding either requires navigating specific app screens.
-> I wanted the AI agent to surface both through chat -- without exposing
-> any document contents to the LLM."
+> I wanted the AI agent to surface both through chat -- with metadata
+> by default, and content reading only when the user explicitly consents."
 
 **Step 2 -- MCP Inspector (1 min)**
 - Open browser → connect to `http://localhost:18006/mcp` (Connected Care)
