@@ -219,52 +219,139 @@ func getAllDocs() []map[string]any {
 
 var documentContents = map[string]string{
 	"doc-stmt-001": `
-HEALTH PLAN MONTHLY STATEMENT
-==============================
+HEALTH PLAN MONTHLY STATEMENT — EXPLANATION OF BENEFITS
+=========================================================
 Statement Period: January 1 - January 31, 2026
-Member: Jane Doe
-Member ID: HM-12345678
-Plan: Gold PPO Health Plan
+Generated: February 3, 2026
+Member: Jane Doe | DOB: 04/15/1985
+Member ID: HM-12345678 | Group: GRP-ACME-2026
+Plan: Gold PPO Health Plan (In-Network Tier 1)
+PCP: Dr. Sarah Smith, MD — Lakewood Medical Center
 
-CLAIMS SUMMARY
---------------
+IMPORTANT NOTICES
+-----------------
+• Your annual wellness visit is due. Schedule before March 31, 2026 to
+  avoid the $150 preventive care gap.
+• Prescription benefit changes effective February 1, 2026: Lisinopril
+  moves to Tier 1 ($5 copay). Atorvastatin remains Tier 2 ($15 copay).
+• You have unused FSA funds of $340.00 expiring December 31, 2026.
 
-1. Office Visit - Preventive Care
-   Date of Service: January 15, 2026
-   Provider: Dr. Sarah Smith, Family Medicine
-   Facility: Lakewood Medical Center
-   Billed Amount:    $150.00
-   Plan Discount:    -$75.00
-   Plan Paid:        -$50.00
-   YOUR COPAY:       $25.00
+CLAIMS DETAIL — 7 CLAIMS PROCESSED
+------------------------------------
 
-2. Laboratory Services - Blood Work
-   Date of Service: January 15, 2026
-   Provider: Quest Diagnostics
-   Billed Amount:    $285.00
-   Plan Discount:    -$142.50
-   Plan Paid:        -$142.50
-   YOUR COST:        $0.00
+1. Office Visit — Annual Physical & Preventive Screening
+   Date of Service:   January 8, 2026
+   Provider:          Dr. Sarah Smith, MD (Family Medicine)
+   Facility:          Lakewood Medical Center
+   Procedure Codes:   99395 (preventive visit), 36415 (venipuncture)
+   Diagnosis:         Z00.00 (General adult medical exam)
+   Billed Amount:     $285.00
+   Network Discount:  -$127.50
+   Plan Paid:         -$157.50
+   YOUR COST:         $0.00    ← Covered 100% as preventive care
 
-3. Prescription - Lisinopril 10mg (30-day supply)
-   Date of Service: January 16, 2026
-   Pharmacy: CVS Pharmacy #4521
-   Retail Price:     $45.00
-   Plan Paid:        -$35.00
-   YOUR COPAY:       $10.00
+2. Laboratory Services — Comprehensive Metabolic Panel + Lipid Panel
+   Date of Service:   January 8, 2026
+   Provider:          Quest Diagnostics (Reference Lab)
+   Procedure Codes:   80053 (CMP), 80061 (Lipid panel), 85025 (CBC)
+   Diagnosis:         Z00.00, E78.5 (Hyperlipidemia screening)
+   Billed Amount:     $412.00
+   Network Discount:  -$247.20
+   Plan Paid:         -$164.80
+   YOUR COST:         $0.00    ← Covered as part of preventive visit
+
+3. Specialist Visit — Cardiology Follow-up
+   Date of Service:   January 14, 2026
+   Provider:          Dr. Robert Nguyen, MD (Cardiology)
+   Facility:          Heart & Vascular Institute
+   Procedure Codes:   99214 (office visit, moderate complexity)
+   Diagnosis:         I10 (Essential hypertension), E78.5 (Hyperlipidemia)
+   Billed Amount:     $350.00
+   Network Discount:  -$140.00
+   Plan Paid:         -$170.00
+   YOUR COPAY:        $40.00   ← Specialist copay
+
+4. Diagnostic Imaging — Echocardiogram
+   Date of Service:   January 14, 2026
+   Provider:          Heart & Vascular Institute (Imaging Dept.)
+   Procedure Codes:   93306 (Echocardiography, complete)
+   Diagnosis:         I10 (Essential hypertension)
+   Pre-authorization: AUTH-2026-00312 (Approved 01/10/2026)
+   Billed Amount:     $1,850.00
+   Network Discount:  -$1,017.50
+   Plan Paid (80%):   -$665.00
+   YOUR COINSURANCE:  $167.50  ← 20% coinsurance after deductible
+
+5. Prescription — Lisinopril 10mg (90-day mail order)
+   Date of Service:   January 16, 2026
+   Pharmacy:          CVS Caremark Mail Order
+   NDC:               00591-0407-01
+   Quantity:          90 tablets
+   Days Supply:       90
+   Retail Price:      $67.50
+   Plan Paid:         -$57.50
+   YOUR COPAY:        $10.00   ← Tier 1 generic
+
+6. Prescription — Atorvastatin 20mg (30-day supply)
+   Date of Service:   January 16, 2026
+   Pharmacy:          CVS Pharmacy #4521
+   NDC:               00378-3952-77
+   Quantity:          30 tablets
+   Days Supply:       30
+   Retail Price:      $128.00
+   Plan Paid:         -$113.00
+   YOUR COPAY:        $15.00   ← Tier 2 preferred brand
+
+7. Urgent Care Visit — Acute Sinusitis
+   Date of Service:   January 22, 2026
+   Provider:          MinuteClinic (Walk-in)
+   Facility:          CVS MinuteClinic #4521
+   Procedure Codes:   99203 (new patient, low complexity)
+   Diagnosis:         J01.90 (Acute sinusitis, unspecified)
+   Prescription:      Amoxicillin 500mg (10-day course) — $4.00 generic
+   Billed Amount:     $195.00
+   Network Discount:  -$78.00
+   Plan Paid:         -$82.00
+   YOUR COPAY:        $35.00   ← Urgent care copay
+   Rx Copay:          $4.00    ← Tier 1 generic
 
 MONTHLY TOTALS
 --------------
-Total Billed:       $480.00
-Plan Discounts:     -$217.50
-Plan Paid:          -$227.50
-YOUR TOTAL:         $35.00
+Total Billed:               $3,287.50
+Network Discounts:          -$1,610.20
+Plan Paid:                  -$1,405.80
+YOUR OUT-OF-POCKET TOTAL:   $271.50
 
-DEDUCTIBLE STATUS
------------------
-Individual Deductible:  $500.00 / $1,500.00 used
-Family Deductible:      $500.00 / $3,000.00 used
-Out-of-Pocket Maximum:  $535.00 / $6,000.00 used
+   Breakdown:
+   • Copays:        $104.00  (specialist $40 + Rx $10 + Rx $15 + urgent $35 + Rx $4)
+   • Coinsurance:   $167.50  (echocardiogram 20%)
+   • Deductible:    $0.00    (already met)
+
+YEAR-TO-DATE ACCUMULATOR STATUS
+---------------------------------
+                           Used        Limit       Remaining
+Individual Deductible:     $1,500.00   $1,500.00   $0.00 (MET)
+Family Deductible:         $2,150.00   $3,000.00   $850.00
+Out-of-Pocket Maximum:     $2,421.50   $6,000.00   $3,578.50
+Preventive Visits Used:    1 of 1 annual
+Specialist Visits (YTD):   3
+
+NOTES & EXPLANATIONS
+---------------------
+• Claim #4 (Echocardiogram): Pre-authorization was obtained. After the
+  negotiated rate, you owe 20% coinsurance ($167.50) because your
+  individual deductible has already been met for the year. Without the
+  network discount, this procedure would have cost $1,850.00.
+• Claim #7 (Urgent Care): Consider using Telehealth ($0 copay) for
+  non-emergency conditions like sinusitis to save on urgent care copays.
+• Your prescription costs could be reduced by switching Atorvastatin to
+  mail-order (90-day supply for $30 vs $45 for three 30-day fills).
+
+APPEALS & QUESTIONS
+--------------------
+If you believe a claim was processed incorrectly, you may file an appeal
+within 180 days. Contact Member Services: 1-800-555-PLAN (7526)
+Online: www.goldppohealth.com/members | App: Gold Health Mobile
 `,
 	"doc-stmt-002": `
 HEALTH PLAN MONTHLY STATEMENT
