@@ -161,27 +161,6 @@
         </div>
       </div>
 
-      <!-- get_document_link -->
-      <div class="tool-card">
-        <div class="tool-header">
-          <span class="tool-name">get_document_link</span>
-          <span class="tool-badge">Link</span>
-        </div>
-        <div class="tool-body">
-          <p class="tool-desc">Get a download link for any document. Requires documentId and source.</p>
-          <div class="input-group"><label>documentId</label><input type="text" id="input-linkDocId" value="doc-stmt-001"></div>
-          <div class="input-group">
-            <label>source</label>
-            <select id="input-linkSource">
-              <option value="health_records">health_records</option>
-              <option value="messaging">messaging</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="callLink()" id="btn-link">Run Tool</button>
-          <div class="result-panel" id="result-link" style="display:none"><h3>Result</h3><div class="result-box" id="result-link-content"></div></div>
-        </div>
-      </div>
-
       <!-- read_document -->
       <div class="tool-card" style="border-color: #854d0e;">
         <div class="tool-header" style="border-color: #854d0e;">
@@ -364,14 +343,6 @@ function renderContent(sc) {
   </div>`;
 }
 
-function renderLink(sc) {
-  return `<div class="doc-card">
-    <div class="doc-title">Download Link</div>
-    <div class="doc-meta">Document: <code>${sc.documentId}</code> &middot; Source: <code>${sc.source}</code></div>
-    <div class="doc-meta" style="margin-top:2px">URL: <code>${sc.downloadUrl}</code></div>
-  </div>`;
-}
-
 // ── Tool callers ──
 
 async function callTool(tool, args, panelId, renderer) {
@@ -418,18 +389,6 @@ async function callFilters() {
   setLoading('btn-filters', false);
 }
 
-async function callLink() {
-  setLoading('btn-link', true);
-  try {
-    const args = {
-      documentId: document.getElementById('input-linkDocId').value,
-      source: document.getElementById('input-linkSource').value
-    };
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'get_document_link', arguments: args });
-    showResult('result-link', data, renderLink);
-  } catch (err) { showResult('result-link', { error: { message: err.message } }); }
-  setLoading('btn-link', false);
-}
 
 async function callRead() {
   setLoading('btn-read', true);
