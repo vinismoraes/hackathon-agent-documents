@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICES_DIR="$HOME/GoProjects/services"
 SERVICES_EL="$SERVICES_DIR/src/el"
 AOR_DIR="$HOME/GoProjects/agent-orchestrator"
-MOCK_DIR="$SCRIPT_DIR/demo-mock-server"
 MCP_DIR="$SERVICES_EL/apps/connected_care/local_mcp_server"
 CHAT_UI_DIR="$SCRIPT_DIR/chat-ui"
 MCP_TEST_UI_DIR="$SCRIPT_DIR/mcp-test-ui"
@@ -40,25 +39,17 @@ echo "  Hackathon Agent Documents — Full Stack Launcher"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# ── 1. Mock extension server (:8092) ──
-echo "[..] Rebuilding mock server..."
-kill_port 8092
-(cd "$MOCK_DIR" && go build -o demo-mock-server .)
-"$MOCK_DIR/demo-mock-server" &
-PIDS_TO_KILL+=($!)
-sleep 1
-echo "[OK] Mock server on :8092"
-
-# ── 2. Documents MCP server (:18006) ──
-echo "[..] Rebuilding Documents MCP server..."
+# ── 1. Documents MCP server (:18006) + Admin API (:18007) ──
+echo "[..] Rebuilding Documents MCP server (stub mode — no external dependencies)..."
 kill_port 18006
+kill_port 18007
 (cd "$SERVICES_EL" && go build -o "$MCP_DIR/local-mcp-server" ./apps/connected_care/local_mcp_server/)
 (cd "$MCP_DIR" && ./local-mcp-server) &
 PIDS_TO_KILL+=($!)
 sleep 2
-echo "[OK] Documents MCP server on :18006 (unified gateway: health_records + messaging)"
+echo "[OK] Documents MCP server on :18006 + Admin API on :18007"
 
-# ── 3. AOR containers ──
+# ── 2. AOR containers ──
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q agent-orchestrator-agent-orchestrator; then
   echo "[OK] AOR containers already running"
 else
@@ -81,7 +72,7 @@ else
   exit 1
 fi
 
-# ── 4. Chat UI (:8093) ──
+# ── 3. Chat UI (:8093) ──
 echo "[..] Rebuilding Chat UI..."
 kill_port 8093
 (cd "$CHAT_UI_DIR" && go build -o chat-ui-server .)
@@ -90,7 +81,7 @@ PIDS_TO_KILL+=($!)
 sleep 1
 echo "[OK] Chat UI on :8093"
 
-# ── 5. MCP Test UI (:8091) ──
+# ── 4. MCP Test UI (:8091) ──
 echo "[..] Rebuilding MCP Test UI..."
 kill_port 8091
 (cd "$MCP_TEST_UI_DIR" && go build -o mcp-test-ui .)
@@ -111,6 +102,7 @@ echo "  Demo scripts:"
 echo "    $SCRIPT_DIR/demo-scripts/demo-1-autonomous-thinking.sh"
 echo "    $SCRIPT_DIR/demo-scripts/demo-2-privacy-consent.sh"
 echo "    $SCRIPT_DIR/demo-scripts/demo-3-problem-solving.sh"
+echo "    $SCRIPT_DIR/demo-scripts/test-all-prompts.sh"
 echo ""
 echo "  Terminal chat:"
 echo "    $VENV/bin/python $SCRIPT_DIR/chat.py"

@@ -24,6 +24,7 @@ var content embed.FS
 
 const aorTarget = "http://localhost:8080"
 const mockTarget = "http://localhost:8092"
+const adminTarget = "http://localhost:18007"
 
 func buildJWT() string {
 	header := map[string]string{"alg": "HS256", "typ": "JWT"}
@@ -189,6 +190,34 @@ func main() {
 		}
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Write(data.([]byte))
+	})
+
+	// Proxy admin API for source toggles (MCP server admin on :18007)
+	mux.HandleFunc("/api/sources", func(w http.ResponseWriter, r *http.Request) {
+		resp, err := http.Get(adminTarget + "/sources")
+		if err != nil {
+			http.Error(w, "admin API unreachable", 502)
+			return
+		}
+		defer resp.Body.Close()
+		w.Header().Set("Content-Type", "application/json")
+		io.Copy(w, resp.Body)
+	})
+
+	mux.HandleFunc("/api/sources/toggle", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST only", 405)
+			return
+		}
+		body, _ := io.ReadAll(r.Body)
+		resp, err := http.Post(adminTarget+"/sources/toggle", "application/json", strings.NewReader(string(body)))
+		if err != nil {
+			http.Error(w, "admin API unreachable", 502)
+			return
+		}
+		defer resp.Body.Close()
+		w.Header().Set("Content-Type", "application/json")
+		io.Copy(w, resp.Body)
 	})
 
 	mux.Handle("/", http.FileServer(http.FS(content)))

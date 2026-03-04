@@ -634,12 +634,115 @@
   .tag-both { background: #EDE8FA; color: #501CD2; }
   .tag-docs { background: #EFF6FF; color: #2563EB; }
   .tag-msgs { background: #F0FDFA; color: #0D9488; }
+  .tag-benefits { background: #FEF2F2; fg: #DC2626; }
   .tag-consent { background: #FFF7ED; color: #EA580C; }
   .welcome .suggestion:hover {
     border-color: var(--primary);
     color: var(--primary);
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+
+  /* ── Source toggle panel ── */
+  .sources-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+    position: relative;
+  }
+  .sources-btn:hover { background: rgba(255,255,255,0.25); }
+  .sources-btn .sources-count {
+    background: rgba(255,255,255,0.25);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .sources-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    width: 320px;
+    z-index: 100;
+    overflow: hidden;
+    animation: slideIn 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .sources-panel.open { display: block; }
+  .sources-panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #FAFAFA;
+  }
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #F1F5F9;
+    transition: background 0.15s;
+  }
+  .source-row:last-child { border-bottom: none; }
+  .source-row:hover { background: #FAFAFA; }
+  .source-row.disabled { opacity: 0.45; }
+  .source-info { flex: 1; min-width: 0; }
+  .source-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .source-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toggle-switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: #CBD5E1;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch input:checked + .toggle-track {
+    background: var(--primary);
+  }
+  .toggle-switch input:checked + .toggle-track::after {
+    transform: translateX(16px);
+  }
+
+  .welcome .suggestions-empty {
+    padding: 20px;
+    color: var(--text-faint);
+    font-size: 13px;
+    font-style: italic;
   }
 </style>
 </head>
@@ -652,6 +755,16 @@
     <div class="subtitle">Hackathon Demo &mdash; AI Agent Document Management</div>
   </div>
   <div class="header-right">
+    <div style="position:relative;">
+      <button class="sources-btn" id="sources-btn" onclick="toggleSourcesPanel()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Sources <span class="sources-count" id="sources-count">—</span>
+      </button>
+      <div class="sources-panel" id="sources-panel">
+        <div class="sources-panel-header">Document Sources</div>
+        <div id="sources-list"></div>
+      </div>
+    </div>
     <button id="new-chat-btn" onclick="newChat()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Chat
@@ -670,21 +783,8 @@
         <span class="welcome-orbit">&#x2728;</span>
       </div>
       <h2>Documents MCP Tools Demo</h2>
-      <p>Search, read, and upload health documents and conversation attachments using MCP tools powered by the AI Agent Orchestrator.</p>
-      <div class="suggestions">
-        <div class="suggestion-group-label">All sources</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C1;</div>What documents or files do I have?<span class="suggestion-tag tag-both">Docs + Messages</span></div>
-
-        <div class="suggestion-group-label">Health documents</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C2;</div>What health documents do I have?</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4C4;</div>Show me my monthly statements</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F50D;</div>Read my January 2026 statement and summarize it<span class="suggestion-tag tag-consent">Consent-gated</span></div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4E4;</div>I want to upload a health document</div>
-
-        <div class="suggestion-group-label">Conversation attachments</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F4AC;</div>What files were shared in my conversations?</div>
-        <div class="suggestion" onclick="sendSuggestion(this)"><div class="suggestion-icon">&#x1F48A;</div>Do I have a medication guide in my messages?</div>
-      </div>
+      <p id="welcome-subtitle">Search, read, and upload health documents and conversation attachments using MCP tools powered by the AI Agent Orchestrator.</p>
+      <div class="suggestions" id="suggestions-container"></div>
     </div>
   </div>
   <button id="scroll-btn" onclick="scrollDown(true)">
@@ -906,6 +1006,7 @@ async function init() {
     setStatus('disconnected', 'Disconnected');
     console.error('Init failed:', e);
   }
+  fetchSources();
 }
 
 function setStatus(cls, text) {
@@ -934,6 +1035,7 @@ async function newChat() {
   chat.scrollTop = 0;
   isNearBottom = true;
   scrollBtnEl.classList.remove('visible');
+  fetchSources();
 }
 
 function sendSuggestion(el) {
@@ -1434,6 +1536,121 @@ function scrollDown(force) {
 }
 
 msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+
+// Close sources panel when clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('sources-panel');
+  const btn = document.getElementById('sources-btn');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+
+// ── Source toggle management ──
+
+let sourcesData = [];
+
+const PROMPT_META = {
+  'What documents or files do I have?':          { icon: '\u{1F4C1}', tag: 'All Sources', tagClass: 'tag-both' },
+  'What health documents do I have?':            { icon: '\u{1F4C2}' },
+  'Show me my monthly statements':               { icon: '\u{1F4C4}' },
+  'Read my January 2026 statement and summarize it': { icon: '\u{1F50D}', tag: 'Consent-gated', tagClass: 'tag-consent' },
+  'I want to upload a health document':          { icon: '\u{1F4E4}' },
+  'What files were shared in my conversations?': { icon: '\u{1F4AC}' },
+  'Do I have a medication guide in my messages?': { icon: '\u{1F48A}' },
+  'What benefits documents do I have?':          { icon: '\u{1F4B3}' },
+};
+
+function toggleSourcesPanel() {
+  document.getElementById('sources-panel').classList.toggle('open');
+}
+
+async function fetchSources() {
+  try {
+    const resp = await fetch('/api/sources');
+    sourcesData = await resp.json();
+  } catch {
+    sourcesData = [];
+  }
+  renderSourcePanel();
+  renderSuggestions();
+}
+
+async function toggleSource(id, enabled) {
+  await fetch('/api/sources/toggle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, enabled })
+  });
+  await fetchSources();
+}
+
+function renderSourcePanel() {
+  const list = document.getElementById('sources-list');
+  const countEl = document.getElementById('sources-count');
+  const enabled = sourcesData.filter(s => s.enabled).length;
+  countEl.textContent = enabled + '/' + sourcesData.length;
+
+  list.innerHTML = '';
+  for (const src of sourcesData) {
+    const row = document.createElement('div');
+    row.className = 'source-row' + (src.enabled ? '' : ' disabled');
+    row.innerHTML =
+      '<div class="source-info">' +
+        '<div class="source-name">' + esc(src.name) + '</div>' +
+        '<div class="source-desc">' + esc(src.description) + '</div>' +
+      '</div>' +
+      '<label class="toggle-switch">' +
+        '<input type="checkbox"' + (src.enabled ? ' checked' : '') + ' onchange="toggleSource(\'' + src.id + '\', this.checked)">' +
+        '<span class="toggle-track"></span>' +
+      '</label>';
+    list.appendChild(row);
+  }
+}
+
+function renderSuggestions() {
+  const container = document.getElementById('suggestions-container');
+  const subtitle = document.getElementById('welcome-subtitle');
+  const enabledSources = sourcesData.filter(s => s.enabled);
+
+  if (enabledSources.length === 0) {
+    container.innerHTML = '<div class="suggestions-empty">Enable at least one document source to see suggestions.</div>';
+    subtitle.textContent = 'Toggle document sources using the Sources button above, then try the suggested prompts.';
+    return;
+  }
+
+  const sourceNames = enabledSources.map(s => s.name).join(', ');
+  subtitle.textContent = 'Search, read, and upload documents from ' + sourceNames + ' using MCP tools powered by the AI Agent Orchestrator.';
+
+  let html = '';
+
+  if (enabledSources.length >= 2) {
+    html += '<div class="suggestion-group-label">All sources</div>';
+    html += buildSuggestion('What documents or files do I have?');
+  }
+
+  for (const src of enabledSources) {
+    if (!src.prompts || src.prompts.length === 0) continue;
+    html += '<div class="suggestion-group-label">' + esc(src.name) + '</div>';
+    for (const prompt of src.prompts) {
+      html += buildSuggestion(prompt);
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+function buildSuggestion(promptText) {
+  const meta = PROMPT_META[promptText] || { icon: '\u{1F4C4}' };
+  let html = '<div class="suggestion" onclick="sendSuggestion(this)">';
+  html += '<div class="suggestion-icon">' + meta.icon + '</div>';
+  html += esc(promptText);
+  if (meta.tag) {
+    html += '<span class="suggestion-tag ' + (meta.tagClass || '') + '">' + esc(meta.tag) + '</span>';
+  }
+  html += '</div>';
+  return html;
+}
 
 init();
 </script>
