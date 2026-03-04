@@ -334,26 +334,26 @@
   .card .card-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .card .card-btn {
-    padding: 6px 14px;
-    border: 1px solid var(--primary);
-    color: var(--primary);
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
-    background: white;
+    background: #FAFAFA;
     transition: all 0.15s;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 4px;
   }
-  .card .card-btn:hover { background: var(--primary); color: white; }
-  .card .card-btn svg { width: 12px; height: 12px; }
-  .card .card-btn.btn-view { border-color: #0EA5E9; color: #0EA5E9; }
-  .card .card-btn.btn-view:hover { background: #0EA5E9; color: white; }
-  .card .card-btn.btn-download { border-color: #10B981; color: #10B981; }
-  .card .card-btn.btn-download:hover { background: #10B981; color: white; }
+  .card .card-btn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+  .card .card-btn svg { width: 11px; height: 11px; }
+  .card .card-btn.btn-view { color: var(--text-muted); }
+  .card .card-btn.btn-view:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+  .card .card-btn.btn-download { color: var(--text-muted); }
+  .card .card-btn.btn-download:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
 
   /* Category badge on cards */
   .card .card-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
