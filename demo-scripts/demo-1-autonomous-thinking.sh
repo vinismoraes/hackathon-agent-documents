@@ -22,8 +22,8 @@ SESSION=$(create_session)
 
 echo -e "${BOLD}Step 1: Vague request — agent must figure out what to do${RESET}"
 echo "We just ask a broad question. The agent should:"
-echo "  1. Call get_health_document_filters to discover categories"
-echo "  2. Realize it needs to search and call search_health_documents"
+echo "  1. Call list_document_sources or get_document_filters to discover categories"
+echo "  2. Realize it needs to search and call search_documents"
 echo "  3. Present results with UI cards"
 pause
 

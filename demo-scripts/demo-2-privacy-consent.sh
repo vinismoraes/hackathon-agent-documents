@@ -35,7 +35,7 @@ send_message "$SESSION" "Can you read my January 2026 statement and tell me what
 
 echo -e "${BOLD}Step 3: Grant consent${RESET}"
 echo "Now we explicitly say yes. The agent will call"
-echo "read_document_content and summarize the contents."
+echo "read_document and summarize the contents."
 pause
 
 send_message "$SESSION" "Yes, please go ahead and read it for me."
