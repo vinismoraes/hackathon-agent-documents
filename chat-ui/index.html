@@ -356,6 +356,7 @@
   .card .card-btn.btn-download:hover { background: #10B981; color: white; }
 
   /* Category badge on cards */
+  .card .card-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
   .card .card-category {
     display: inline-flex;
     align-items: center;
@@ -366,8 +367,22 @@
     text-transform: uppercase;
     padding: 3px 10px;
     border-radius: 6px;
-    margin-bottom: 8px;
   }
+  .card .card-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #F1F5F9;
+    color: #64748B;
+    border: 1px solid #E2E8F0;
+  }
+  .card .card-source.source-health { background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; }
+  .card .card-source.source-messaging { background: #F0FDFA; color: #0D9488; border-color: #99F6E4; }
 
   /* ── Chips ── */
   .chips-container {
@@ -1263,13 +1278,25 @@ function addCards(cards) {
       el.style.borderLeft = '3px solid ' + catColor.fg;
     }
 
+    const sourceMatch = (card.body || '').match(/source:\s*([^\n*]+)/i);
+    const sourceName = sourceMatch ? sourceMatch[1].replace(/\*+/g, '').trim() : null;
+    const sourceClass = sourceName ? (sourceName.toLowerCase().includes('health') ? 'source-health' : sourceName.toLowerCase().includes('messag') || sourceName.toLowerCase().includes('conversation') ? 'source-messaging' : '') : '';
+    const cleanBody = card.body ? card.body.replace(/\*?\*?source:\s*[^\n*]+\*?\*?\n?/i, '').trim() : '';
+
     let html = '';
-    if (cat && catColor) {
-      html += '<div class="card-category" style="background:' + catColor.bg + ';color:' + catColor.fg + ';">'
-        + (catColor.icon || '') + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</div>';
+    if ((cat && catColor) || sourceName) {
+      html += '<div class="card-badges">';
+      if (cat && catColor) {
+        html += '<div class="card-category" style="background:' + catColor.bg + ';color:' + catColor.fg + ';">'
+          + (catColor.icon || '') + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</div>';
+      }
+      if (sourceName) {
+        html += '<div class="card-source ' + sourceClass + '">' + esc(sourceName) + '</div>';
+      }
+      html += '</div>';
     }
     if (card.title) html += '<div class="card-title">' + SVG_DOC + ' ' + esc(card.title) + '</div>';
-    if (card.body) html += '<div class="card-body">' + renderMarkdown(card.body) + '</div>';
+    if (cleanBody) html += '<div class="card-body">' + renderMarkdown(cleanBody) + '</div>';
     if (card.buttons && card.buttons.length) {
       html += '<div class="card-buttons">';
       const seenUrls = new Set();
