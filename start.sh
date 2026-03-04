@@ -7,7 +7,6 @@ SERVICES_EL="$SERVICES_DIR/src/el"
 AOR_DIR="$HOME/GoProjects/agent-orchestrator"
 MOCK_DIR="$SCRIPT_DIR/demo-mock-server"
 MCP_DIR="$SERVICES_EL/apps/connected_care/local_mcp_server"
-MSG_MCP_DIR="$SERVICES_EL/apps/messaging/local_mcp_server"
 CHAT_UI_DIR="$SCRIPT_DIR/chat-ui"
 MCP_TEST_UI_DIR="$SCRIPT_DIR/mcp-test-ui"
 VENV="$AOR_DIR/.hackathon-venv"
@@ -57,18 +56,9 @@ kill_port 18006
 (cd "$MCP_DIR" && ./local-mcp-server) &
 PIDS_TO_KILL+=($!)
 sleep 2
-echo "[OK] Documents MCP server on :18006"
+echo "[OK] Documents MCP server on :18006 (unified gateway: health_records + messaging)"
 
-# ── 3. Messaging MCP server (:18005) ──
-echo "[..] Rebuilding Messaging MCP server..."
-kill_port 18005
-(cd "$SERVICES_EL" && go build -o "$MSG_MCP_DIR/local-mcp-server" ./apps/messaging/local_mcp_server/)
-(cd "$MSG_MCP_DIR" && ./local-mcp-server) &
-PIDS_TO_KILL+=($!)
-sleep 2
-echo "[OK] Messaging MCP server on :18005"
-
-# ── 4. AOR containers ──
+# ── 3. AOR containers ──
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q agent-orchestrator-agent-orchestrator; then
   echo "[OK] AOR containers already running"
 else
@@ -91,7 +81,7 @@ else
   exit 1
 fi
 
-# ── 5. Chat UI (:8093) ──
+# ── 4. Chat UI (:8093) ──
 echo "[..] Rebuilding Chat UI..."
 kill_port 8093
 (cd "$CHAT_UI_DIR" && go build -o chat-ui-server .)
@@ -100,7 +90,7 @@ PIDS_TO_KILL+=($!)
 sleep 1
 echo "[OK] Chat UI on :8093"
 
-# ── 6. MCP Test UI (:8091) ──
+# ── 5. MCP Test UI (:8091) ──
 echo "[..] Rebuilding MCP Test UI..."
 kill_port 8091
 (cd "$MCP_TEST_UI_DIR" && go build -o mcp-test-ui .)
