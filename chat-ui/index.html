@@ -649,10 +649,10 @@
   <div id="chat">
     <div class="welcome" id="welcome">
       <div class="welcome-icon-wrapper">
-        <div class="welcome-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="white" stroke="none"><path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"/></svg></div>
-        <span class="welcome-orbit">📋</span>
-        <span class="welcome-orbit">🔍</span>
-        <span class="welcome-orbit">✨</span>
+        <div class="welcome-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <span class="welcome-orbit">&#x1F4AC;</span>
+        <span class="welcome-orbit">&#x1F4C4;</span>
+        <span class="welcome-orbit">&#x2728;</span>
       </div>
       <h2>Documents MCP Tools Demo</h2>
       <p>Search, read, and upload health documents and conversation attachments using MCP tools powered by the AI Agent Orchestrator.</p>
@@ -791,14 +791,25 @@ function isDocumentUrl(url) {
 }
 
 const FRIENDLY_TOOL_NAMES = {
+  // Unified document gateway tools
+  'list_document_sources':        ['Discovering document sources...', 'Sources discovered'],
+  'search_documents':             ['Searching documents...', 'Search complete'],
+  'get_document_filters':         ['Discovering filter categories...', 'Found filter categories'],
+  'get_document_link':            ['Getting document link...', 'Link ready'],
+  'read_document':                ['Reading document content...', 'Document read'],
+  'upload_document':              ['Uploading document...', 'Upload complete'],
+  // Legacy tool names (in case AOR still routes to old names)
   'get_health_document_filters':  ['Discovering document categories...', 'Found document categories'],
   'search_health_documents':      ['Searching documents...', 'Search complete'],
   'read_document_content':        ['Reading document content...', 'Document read'],
   'get_health_document_link':     ['Getting document link...', 'Link ready'],
   'get_health_document_configs':  ['Checking upload constraints...', 'Upload constraints ready'],
   'upload_health_document':       ['Uploading document...', 'Upload complete'],
+  // UI tools
   'ui_chip_list_card':            ['Preparing quick actions...', 'Actions ready'],
   'render_card':                  ['Rendering results...', 'Results ready'],
+  'render_chips':                 ['Preparing quick actions...', 'Actions ready'],
+  // Messaging MCP tools (still on separate server)
   'search_conversation_attachments': ['Searching conversation attachments...', 'Attachments found'],
   'get_attachment_link':          ['Getting attachment link...', 'Link ready'],
   'messaging_mcp_search_conversation_attachments': ['Searching conversation attachments...', 'Attachments found'],

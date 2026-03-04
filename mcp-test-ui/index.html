@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Tools — Hackathon Demo</title>
+  <title>MCP Tools — Document Gateway Demo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
@@ -17,17 +17,16 @@
     .dot.red { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
     .dot.yellow { background: #eab308; }
 
-    .tabs { display: flex; gap: 0; margin: 20px 32px 0; }
-    .tab { padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid #334155; border-bottom: none; border-radius: 8px 8px 0 0; background: #1a2332; color: #94a3b8; transition: all 0.15s; }
-    .tab:hover { color: #e2e8f0; }
-    .tab.active { background: #1e293b; color: #f8fafc; border-color: #475569; }
-    .tab .tab-count { font-size: 11px; font-weight: 400; color: #64748b; margin-left: 6px; }
-    .tab.active .tab-count { color: #94a3b8; }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    .arch-banner { margin: 20px 32px 0; padding: 14px 18px; background: linear-gradient(135deg, #1e3a5f 0%, #1a2332 100%); border: 1px solid #334155; border-radius: 10px; display: flex; align-items: center; gap: 14px; }
+    .arch-icon { font-size: 24px; flex-shrink: 0; }
+    .arch-text h3 { font-size: 13px; font-weight: 600; color: #60a5fa; }
+    .arch-text p { font-size: 11px; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
+    .arch-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: #14532d; color: #4ade80; font-weight: 600; margin-left: auto; flex-shrink: 0; }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 0 32px 24px; }
-    .panel-wrap { background: #1e293b; border: 1px solid #475569; border-radius: 0 8px 8px 8px; padding: 24px; margin: 0 32px; }
+    .panel-wrap { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 24px; margin: 20px 32px; }
+    .panel-title { font-size: 14px; font-weight: 600; color: #f8fafc; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .panel-title .count { font-size: 11px; font-weight: 400; color: #64748b; padding: 2px 8px; background: #0f172a; border-radius: 10px; }
     .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
     .tool-card { background: #0f172a; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
     .tool-card:hover { border-color: #475569; }
@@ -62,6 +61,10 @@
     .doc-card .doc-link { font-size: 11px; color: #60a5fa; margin-top: 4px; display: block; word-break: break-all; }
     .filter-tag { display: inline-block; padding: 3px 8px; background: #1e3a5f; color: #60a5fa; border-radius: 6px; font-size: 11px; margin: 2px 3px 2px 0; }
     .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px; font-weight: 600; }
+    .source-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+    .source-tag.health { background: #1e3a5f; color: #60a5fa; }
+    .source-tag.messaging { background: #14532d; color: #4ade80; }
+    .cap-tag { display: inline-block; padding: 2px 6px; background: #1a2332; border: 1px solid #334155; border-radius: 4px; font-size: 10px; color: #94a3b8; margin: 2px 2px 2px 0; }
 
     .log-section { margin: 24px 32px 32px; }
     .log-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
@@ -71,157 +74,156 @@
 </head>
 <body>
   <div class="header">
-    <h1>MCP Tools — Hackathon Demo</h1>
-    <p>Documents &amp; Messaging MCP Servers</p>
+    <h1>MCP Tools — Document Gateway Demo</h1>
+    <p>Unified Document Gateway &mdash; 6 tools, infinite sources</p>
     <div class="status-row">
-      <div class="status" id="status-cc"><span class="dot yellow"></span><span>Docs: Connecting...</span></div>
-      <div class="status" id="status-msg"><span class="dot yellow"></span><span>Messaging: Connecting...</span></div>
+      <div class="status" id="status-cc"><span class="dot yellow"></span><span>Gateway: Connecting...</span></div>
     </div>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('cc')">Documents <span class="tab-count">7 tools</span></div>
-    <div class="tab" onclick="switchTab('msg')">Messaging <span class="tab-count">2 tools</span></div>
+  <div class="arch-banner">
+    <span class="arch-icon">&#x1F3DB;</span>
+    <div class="arch-text">
+      <h3>Document Gateway Architecture</h3>
+      <p>One set of tools routes to all document sources through a SourceRegistry. Adding a new source = implement one interface. Zero new tools.</p>
+    </div>
+    <span class="arch-badge">6 tools &bull; &infin; sources</span>
   </div>
 
   <div class="panel-wrap">
-    <!-- ═══ DOCUMENTS TAB ═══ -->
-    <div class="tab-panel active" id="panel-cc">
-      <div class="tools-grid">
+    <div class="panel-title">Unified Document Tools <span class="count">6 tools</span></div>
+    <div class="tools-grid">
 
-        <!-- get_health_document_configs -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">get_health_document_configs</span>
-            <span class="tool-badge">No params</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Get upload constraints: max file size, allowed types, max documents per upload.</p>
-            <button class="btn btn-primary" onclick="callCC('get_health_document_configs',{},'result-configs')" id="btn-configs">Run Tool</button>
-            <div class="result-panel" id="result-configs" style="display:none"><h3>Result</h3><div class="result-box" id="result-configs-content"></div></div>
-          </div>
+      <!-- list_document_sources -->
+      <div class="tool-card">
+        <div class="tool-header">
+          <span class="tool-name">list_document_sources</span>
+          <span class="tool-badge">Discovery</span>
         </div>
-
-        <!-- get_health_document_filters -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">get_health_document_filters</span>
-            <span class="tool-badge">No params</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Get available filter categories for searching health documents.</p>
-            <button class="btn btn-primary" onclick="callCC('get_health_document_filters',{},'result-filters',renderFilters)" id="btn-filters">Run Tool</button>
-            <div class="result-panel" id="result-filters" style="display:none"><h3>Result</h3><div class="result-box" id="result-filters-content"></div></div>
-          </div>
+        <div class="tool-body">
+          <p class="tool-desc">Discover available document sources, their capabilities, and upload configs. Call this first.</p>
+          <button class="btn btn-primary" onclick="callTool('list_document_sources',{},'result-sources',renderSources)" id="btn-sources">Run Tool</button>
+          <div class="result-panel" id="result-sources" style="display:none"><h3>Result</h3><div class="result-box" id="result-sources-content"></div></div>
         </div>
-
-        <!-- search_health_documents -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">search_health_documents</span>
-            <span class="tool-badge">Optional params</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Search health documents by category. Returns metadata + download links.</p>
-            <div class="input-group">
-              <label>filterKey</label>
-              <select id="input-filterKey">
-                <option value="">(all documents)</option>
-                <option value="statements">statements</option>
-                <option value="bills">bills</option>
-                <option value="plan_docs">plan_docs</option>
-                <option value="uploaded_by_me">uploaded_by_me</option>
-              </select>
-            </div>
-            <div class="input-group"><label>dateFrom</label><input type="text" id="input-dateFrom" placeholder="YYYY-MM-DD"></div>
-            <div class="input-group"><label>dateTo</label><input type="text" id="input-dateTo" placeholder="YYYY-MM-DD"></div>
-            <button class="btn btn-primary" onclick="callSearchDocs()" id="btn-search">Run Tool</button>
-            <div class="result-panel" id="result-search" style="display:none"><h3>Result</h3><div class="result-box" id="result-search-content"></div></div>
-          </div>
-        </div>
-
-        <!-- get_health_document_link -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">get_health_document_link</span>
-            <span class="tool-badge">Required params</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Get a download link for a specific document by ID.</p>
-            <div class="input-group"><label>documentId</label><input type="text" id="input-docId" value="doc-stmt-001"></div>
-            <div class="input-group"><label>documentType</label><input type="text" id="input-docType" value="document"></div>
-            <button class="btn btn-primary" onclick="callLinkDoc()" id="btn-link">Run Tool</button>
-            <div class="result-panel" id="result-link" style="display:none"><h3>Result</h3><div class="result-box" id="result-link-content"></div></div>
-          </div>
-        </div>
-
-        <!-- read_document_content -->
-        <div class="tool-card" style="border-color: #854d0e;">
-          <div class="tool-header" style="border-color: #854d0e;">
-            <span class="tool-name" style="color: #facc15;">read_document_content</span>
-            <span class="tool-badge" style="background:#422006;color:#facc15;">Consent-gated</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Read the full text content of a document. In production, agent asks for user consent first.</p>
-            <div class="input-group"><label>documentId</label><input type="text" id="input-readDocId" value="doc-stmt-001"></div>
-            <div class="input-group"><label>documentType</label><input type="text" id="input-readDocType" value="document"></div>
-            <button class="btn btn-amber" onclick="callReadDoc()" id="btn-read">Run Tool</button>
-            <div class="result-panel" id="result-read" style="display:none"><h3>Result</h3><div class="result-box" id="result-read-content"></div></div>
-          </div>
-        </div>
-
-        <!-- upload_health_document -->
-        <div class="tool-card" style="border-color: #166534;">
-          <div class="tool-header" style="border-color: #166534;">
-            <span class="tool-name" style="color: #4ade80;">upload_health_document</span>
-            <span class="tool-badge" style="background:#14532d;color:#4ade80;">Upload</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Upload a health document. Select a file — it will be stored temporarily and forwarded to the extension backend.</p>
-            <div class="input-group"><label>Select file</label><input type="file" id="input-uploadFile" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"></div>
-            <div class="input-group"><label>Title (optional)</label><input type="text" id="input-uploadTitle" placeholder="e.g. Lab Results February"></div>
-            <button class="btn btn-green" onclick="callUploadDoc()" id="btn-upload">Upload &amp; Run Tool</button>
-            <div class="result-panel" id="result-upload" style="display:none"><h3>Result</h3><div class="result-box" id="result-upload-content"></div></div>
-          </div>
-        </div>
-
       </div>
-    </div>
 
-    <!-- ═══ MESSAGING TAB ═══ -->
-    <div class="tab-panel" id="panel-msg">
-      <div class="tools-grid">
-
-        <!-- search_conversation_attachments -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">search_conversation_attachments</span>
-            <span class="tool-badge">Optional params</span>
-          </div>
-          <div class="tool-body">
-            <p class="tool-desc">Search for file attachments shared in the user's messaging conversations.</p>
-            <div class="input-group"><label>threadId (optional)</label><input type="text" id="input-msgThreadId" placeholder="Leave empty to search all threads"></div>
-            <div class="input-group"><label>limit (optional)</label><input type="number" id="input-msgLimit" placeholder="Default: 10" min="1" max="50"></div>
-            <button class="btn btn-primary" onclick="callMsgSearch()" id="btn-msg-search">Run Tool</button>
-            <div class="result-panel" id="result-msg-search" style="display:none"><h3>Result</h3><div class="result-box" id="result-msg-search-content"></div></div>
-          </div>
+      <!-- search_documents -->
+      <div class="tool-card">
+        <div class="tool-header">
+          <span class="tool-name">search_documents</span>
+          <span class="tool-badge">Search</span>
         </div>
-
-        <!-- get_attachment_link -->
-        <div class="tool-card">
-          <div class="tool-header">
-            <span class="tool-name">get_attachment_link</span>
-            <span class="tool-badge">Required params</span>
+        <div class="tool-body">
+          <p class="tool-desc">Search across one or all document sources. Omit source to search everything.</p>
+          <div class="input-group">
+            <label>source (optional)</label>
+            <select id="input-source">
+              <option value="">(all sources)</option>
+              <option value="health_records">health_records</option>
+              <option value="messaging">messaging</option>
+            </select>
           </div>
-          <div class="tool-body">
-            <p class="tool-desc">Get a download link for a specific messaging attachment by its document ID.</p>
-            <div class="input-group"><label>documentId</label><input type="text" id="input-msgDocId" value="attach-001" placeholder="e.g. attach-001"></div>
-            <button class="btn btn-primary" onclick="callMsgLink()" id="btn-msg-link">Run Tool</button>
-            <div class="result-panel" id="result-msg-link" style="display:none"><h3>Result</h3><div class="result-box" id="result-msg-link-content"></div></div>
+          <div class="input-group">
+            <label>filterKey (optional)</label>
+            <select id="input-filterKey">
+              <option value="">(no filter)</option>
+              <option value="statements">statements</option>
+              <option value="bills">bills</option>
+              <option value="plan_docs">plan_docs</option>
+              <option value="uploaded_by_me">uploaded_by_me</option>
+            </select>
           </div>
+          <div class="input-group"><label>query (optional)</label><input type="text" id="input-query" placeholder="Text search (e.g. medication guide)"></div>
+          <div class="input-group"><label>dateFrom</label><input type="text" id="input-dateFrom" placeholder="YYYY-MM-DD"></div>
+          <div class="input-group"><label>dateTo</label><input type="text" id="input-dateTo" placeholder="YYYY-MM-DD"></div>
+          <button class="btn btn-primary" onclick="callSearchDocs()" id="btn-search">Run Tool</button>
+          <div class="result-panel" id="result-search" style="display:none"><h3>Result</h3><div class="result-box" id="result-search-content"></div></div>
         </div>
-
       </div>
+
+      <!-- get_document_filters -->
+      <div class="tool-card">
+        <div class="tool-header">
+          <span class="tool-name">get_document_filters</span>
+          <span class="tool-badge">Filters</span>
+        </div>
+        <div class="tool-body">
+          <p class="tool-desc">Get available filter categories for a source. Only sources with filter capability return data.</p>
+          <div class="input-group">
+            <label>source (optional)</label>
+            <select id="input-filterSource">
+              <option value="">(all sources)</option>
+              <option value="health_records">health_records</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="callFilters()" id="btn-filters">Run Tool</button>
+          <div class="result-panel" id="result-filters" style="display:none"><h3>Result</h3><div class="result-box" id="result-filters-content"></div></div>
+        </div>
+      </div>
+
+      <!-- get_document_link -->
+      <div class="tool-card">
+        <div class="tool-header">
+          <span class="tool-name">get_document_link</span>
+          <span class="tool-badge">Link</span>
+        </div>
+        <div class="tool-body">
+          <p class="tool-desc">Get a download link for any document. Requires documentId and source.</p>
+          <div class="input-group"><label>documentId</label><input type="text" id="input-linkDocId" value="doc-stmt-001"></div>
+          <div class="input-group">
+            <label>source</label>
+            <select id="input-linkSource">
+              <option value="health_records">health_records</option>
+              <option value="messaging">messaging</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="callLink()" id="btn-link">Run Tool</button>
+          <div class="result-panel" id="result-link" style="display:none"><h3>Result</h3><div class="result-box" id="result-link-content"></div></div>
+        </div>
+      </div>
+
+      <!-- read_document -->
+      <div class="tool-card" style="border-color: #854d0e;">
+        <div class="tool-header" style="border-color: #854d0e;">
+          <span class="tool-name" style="color: #facc15;">read_document</span>
+          <span class="tool-badge" style="background:#422006;color:#facc15;">Consent-gated</span>
+        </div>
+        <div class="tool-body">
+          <p class="tool-desc">Read full text content of a document. In production, agent asks for consent first.</p>
+          <div class="input-group"><label>documentId</label><input type="text" id="input-readDocId" value="doc-stmt-001"></div>
+          <div class="input-group">
+            <label>source</label>
+            <select id="input-readSource">
+              <option value="health_records">health_records</option>
+            </select>
+          </div>
+          <div class="input-group"><label>documentType (optional)</label><input type="text" id="input-readDocType" placeholder="e.g. document"></div>
+          <button class="btn btn-amber" onclick="callRead()" id="btn-read">Run Tool</button>
+          <div class="result-panel" id="result-read" style="display:none"><h3>Result</h3><div class="result-box" id="result-read-content"></div></div>
+        </div>
+      </div>
+
+      <!-- upload_document -->
+      <div class="tool-card" style="border-color: #166534;">
+        <div class="tool-header" style="border-color: #166534;">
+          <span class="tool-name" style="color: #4ade80;">upload_document</span>
+          <span class="tool-badge" style="background:#14532d;color:#4ade80;">Upload</span>
+        </div>
+        <div class="tool-body">
+          <p class="tool-desc">Upload a document to a source. Select a file — it will be stored temporarily and forwarded to the backend.</p>
+          <div class="input-group">
+            <label>source</label>
+            <select id="input-uploadSource">
+              <option value="health_records">health_records</option>
+            </select>
+          </div>
+          <div class="input-group"><label>Select file</label><input type="file" id="input-uploadFile" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"></div>
+          <div class="input-group"><label>Title (optional)</label><input type="text" id="input-uploadTitle" placeholder="e.g. Lab Results February"></div>
+          <button class="btn btn-green" onclick="callUpload()" id="btn-upload">Upload &amp; Run Tool</button>
+          <div class="result-panel" id="result-upload" style="display:none"><h3>Result</h3><div class="result-box" id="result-upload-content"></div></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -240,68 +242,54 @@
 
 <script>
 const CC_URL = '/mcp/cc';
-const MSG_URL = '/mcp/msg';
-
 let ccSession = null;
-let msgSession = null;
 let requestId = 0;
 let requestCount = 0;
 
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector(`.tab-panel#panel-${name}`).classList.add('active');
-  event.currentTarget.classList.add('active');
-}
-
-async function mcpRequest(url, method, params, sessionRef) {
+async function mcpRequest(url, method, params) {
   requestId++;
   const body = { jsonrpc: '2.0', id: requestId, method, params };
   const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Agent-Name': 'hackathon-demo' };
-  const sid = sessionRef === 'cc' ? ccSession : msgSession;
-  if (sid) headers['Mcp-Session-Id'] = sid;
+  if (ccSession) headers['Mcp-Session-Id'] = ccSession;
 
-  logRaw('REQUEST', sessionRef.toUpperCase(), method, body);
+  logRaw('REQUEST', method, body);
 
   const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   const newSid = resp.headers.get('Mcp-Session-Id');
-  if (newSid) {
-    if (sessionRef === 'cc') ccSession = newSid;
-    else msgSession = newSid;
-  }
+  if (newSid) ccSession = newSid;
 
   if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
   const data = await resp.json();
-  logRaw('RESPONSE', sessionRef.toUpperCase(), method, data);
+  logRaw('RESPONSE', method, data);
   requestCount++;
   document.getElementById('request-count').textContent = `${requestCount} requests`;
   return data;
 }
 
-function logRaw(dir, server, method, data) {
+function logRaw(dir, method, data) {
   const log = document.getElementById('raw-log');
   const time = new Date().toLocaleTimeString();
   const arrow = dir === 'REQUEST' ? '>>>' : '<<<';
   const color = dir === 'REQUEST' ? '#60a5fa' : '#22c55e';
   const entry = document.createElement('div');
   entry.style.marginBottom = '8px';
-  entry.innerHTML = `<span style="color:${color};font-weight:600">${arrow} ${dir}</span> <span style="color:#64748b">${time}</span> <span style="color:#eab308">[${server}]</span> <span style="color:#94a3b8">${method}</span>\n<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  entry.innerHTML = `<span style="color:${color};font-weight:600">${arrow} ${dir}</span> <span style="color:#64748b">${time}</span> <span style="color:#94a3b8">${method}</span>\n<pre>${JSON.stringify(data, null, 2)}</pre>`;
   if (log.querySelector('pre') && requestCount === 0) log.innerHTML = '';
   log.prepend(entry);
 }
 
-async function initServer(url, ref, statusId) {
-  const el = document.getElementById(statusId);
+async function initServer() {
+  const el = document.getElementById('status-cc');
   try {
-    const res = await mcpRequest(url, 'initialize', {
+    const res = await mcpRequest(CC_URL, 'initialize', {
       protocolVersion: '2025-03-26', capabilities: {},
-      clientInfo: { name: 'hackathon-mcp-ui', version: '1.0' }
-    }, ref);
+      clientInfo: { name: 'hackathon-mcp-ui', version: '2.0' }
+    });
     if (res.result) {
-      el.innerHTML = `<span class="dot green"></span><span>${ref.toUpperCase()}: ${res.result.serverInfo.name}</span>`;
+      el.innerHTML = `<span class="dot green"></span><span>Gateway: ${res.result.serverInfo.name}</span>`;
     }
   } catch (err) {
-    el.innerHTML = `<span class="dot red"></span><span>${ref.toUpperCase()}: ${err.message.substring(0, 60)}</span>`;
+    el.innerHTML = `<span class="dot red"></span><span>Gateway: ${err.message.substring(0, 60)}</span>`;
   }
 }
 
@@ -330,29 +318,48 @@ function showResult(panelId, data, renderer) {
 
 // ── Renderers ──
 
-function renderFilters(sc) {
-  return (sc.filters || []).map(f => {
-    const opts = (f.options || []).map(o => `<span class="filter-tag">${o.label}</span>`).join('');
-    return `<div class="doc-card"><div class="doc-title">${f.filterName}</div><div class="doc-meta">Key: <code>${f.filterKey}</code></div>${opts ? `<div style="margin-top:6px">${opts}</div>` : ''}</div>`;
+function renderSources(sc) {
+  return (sc.sources || []).map(s => {
+    const caps = (s.capabilities || []).map(c => `<span class="cap-tag">${c}</span>`).join('');
+    let upload = '';
+    if (s.uploadConfig) {
+      upload = `<div class="doc-meta" style="margin-top:4px">Upload: max ${s.uploadConfig.maxFileSizeMB?.toFixed(0) || '?'} MB, types: ${(s.uploadConfig.allowedTypes || []).join(', ')}</div>`;
+    }
+    return `<div class="doc-card">
+      <div class="doc-title"><span class="source-tag ${s.id === 'health_records' ? 'health' : 'messaging'}">${s.id}</span> ${s.name}</div>
+      <div class="doc-meta">${s.description}</div>
+      <div style="margin-top:6px">${caps}</div>
+      ${upload}
+    </div>`;
   }).join('');
 }
 
 function renderDocuments(sc) {
   const docs = sc.documents || [];
-  let html = `<div class="section-label">${sc.totalRecords || 0} document(s)</div>`;
+  let html = `<div class="section-label">${sc.totalRecords || 0} document(s) from ${(sc.sources || []).join(' + ')}</div>`;
   html += docs.map(d => `<div class="doc-card">
-    <div class="doc-title">${d.title}</div>
-    <div class="doc-meta">${(d.fileType||'').toUpperCase()} &middot; ${d.createdDate} &middot; ${(d.actions||[]).join(', ')}</div>
-    <div class="doc-meta">ID: <code>${d.id}</code></div>
-    <a class="doc-link" href="/doc-content?documentId=${d.id}" target="_blank">View Content</a>
+    <div class="doc-title"><span class="source-tag ${d.source === 'health_records' ? 'health' : 'messaging'}">${d.source}</span> ${d.title}</div>
+    <div class="doc-meta">${(d.fileType||'').toUpperCase()} &middot; ${d.category} &middot; ${d.createdDate}</div>
+    <div class="doc-meta">ID: <code>${d.id}</code> &middot; Type: <code>${d.documentType || '-'}</code></div>
+    ${d.downloadUrl ? `<a class="doc-link" href="#" onclick="return false;">${d.downloadUrl}</a>` : ''}
   </div>`).join('');
   return html;
+}
+
+function renderFilters(sc) {
+  return (sc.sourceFilters || []).map(sf => {
+    const filterCards = (sf.filters || []).map(f => {
+      const opts = (f.options || []).map(o => `<span class="filter-tag">${o.label}</span>`).join('');
+      return `<div style="margin-top:6px"><strong>${f.filterName}</strong> <code style="color:#64748b">${f.filterKey}</code>${opts ? `<div style="margin-top:4px">${opts}</div>` : ''}</div>`;
+    }).join('');
+    return `<div class="doc-card"><div class="doc-title"><span class="source-tag health">${sf.source}</span> Filters</div>${filterCards}</div>`;
+  }).join('');
 }
 
 function renderContent(sc) {
   return `<div class="doc-card" style="border-color:#854d0e;">
     <div class="doc-title" style="color:#facc15;">Document Content (${sc.byteCount||0} bytes)</div>
-    <div class="doc-meta">ID: <code>${sc.documentId}</code></div>
+    <div class="doc-meta">ID: <code>${sc.documentId}</code> &middot; Source: <code>${sc.source}</code></div>
     <pre style="margin-top:10px;padding:10px;background:#0f172a;border-radius:6px;border:1px solid #334155;max-height:300px;overflow-y:auto;">${sc.content||''}</pre>
   </div>`;
 }
@@ -360,39 +367,18 @@ function renderContent(sc) {
 function renderLink(sc) {
   return `<div class="doc-card">
     <div class="doc-title">Download Link</div>
-    <div class="doc-meta">Document: <code>${sc.documentId}</code></div>
-    <a class="doc-link" href="/doc-content?documentId=${sc.documentId}" target="_blank">View Content</a>
+    <div class="doc-meta">Document: <code>${sc.documentId}</code> &middot; Source: <code>${sc.source}</code></div>
     <div class="doc-meta" style="margin-top:2px">URL: <code>${sc.downloadUrl}</code></div>
   </div>`;
 }
 
-function renderAttachments(sc) {
-  const atts = sc.attachments || [];
-  let html = `<div class="section-label">${sc.totalFound || 0} attachment(s) across ${sc.threadsScanned || 0} thread(s)</div>`;
-  html += atts.map(a => `<div class="doc-card">
-    <div class="doc-title">${a.fileName}</div>
-    <div class="doc-meta">${a.fileType} &middot; ${a.size} bytes &middot; Sent ${a.sentAt}</div>
-    <div class="doc-meta">Thread: ${a.threadName} &middot; By: ${a.sentBy}</div>
-    <div class="doc-meta">ID: <code>${a.documentId}</code></div>
-  </div>`).join('');
-  return html;
-}
+// ── Tool callers ──
 
-function renderMsgLink(sc) {
-  return `<div class="doc-card">
-    <div class="doc-title">Attachment Link</div>
-    <div class="doc-meta">Document: <code>${sc.documentId}</code></div>
-    <div class="doc-meta">URL: <code>${sc.downloadUrl}</code></div>
-  </div>`;
-}
-
-// ── Documents tool callers ──
-
-async function callCC(tool, args, panelId, renderer) {
+async function callTool(tool, args, panelId, renderer) {
   const btnId = document.querySelector(`#${panelId}`).closest('.tool-card').querySelector('button').id;
   setLoading(btnId, true);
   try {
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: tool, arguments: args }, 'cc');
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: tool, arguments: args });
     showResult(panelId, data, renderer);
   } catch (err) {
     showResult(panelId, { error: { message: err.message } });
@@ -404,39 +390,63 @@ async function callSearchDocs() {
   setLoading('btn-search', true);
   try {
     const args = {};
+    const src = document.getElementById('input-source').value;
     const fk = document.getElementById('input-filterKey').value;
+    const q = document.getElementById('input-query').value;
     const df = document.getElementById('input-dateFrom').value;
     const dt = document.getElementById('input-dateTo').value;
+    if (src) args.source = src;
     if (fk) args.filterKey = fk;
+    if (q) args.query = q;
     if (df) args.dateFrom = df;
     if (dt) args.dateTo = dt;
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'search_health_documents', arguments: args }, 'cc');
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'search_documents', arguments: args });
     showResult('result-search', data, renderDocuments);
   } catch (err) { showResult('result-search', { error: { message: err.message } }); }
   setLoading('btn-search', false);
 }
 
-async function callLinkDoc() {
+async function callFilters() {
+  setLoading('btn-filters', true);
+  try {
+    const args = {};
+    const src = document.getElementById('input-filterSource').value;
+    if (src) args.source = src;
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'get_document_filters', arguments: args });
+    showResult('result-filters', data, renderFilters);
+  } catch (err) { showResult('result-filters', { error: { message: err.message } }); }
+  setLoading('btn-filters', false);
+}
+
+async function callLink() {
   setLoading('btn-link', true);
   try {
-    const args = { documentId: document.getElementById('input-docId').value, documentType: document.getElementById('input-docType').value };
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'get_health_document_link', arguments: args }, 'cc');
+    const args = {
+      documentId: document.getElementById('input-linkDocId').value,
+      source: document.getElementById('input-linkSource').value
+    };
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'get_document_link', arguments: args });
     showResult('result-link', data, renderLink);
   } catch (err) { showResult('result-link', { error: { message: err.message } }); }
   setLoading('btn-link', false);
 }
 
-async function callReadDoc() {
+async function callRead() {
   setLoading('btn-read', true);
   try {
-    const args = { documentId: document.getElementById('input-readDocId').value, documentType: document.getElementById('input-readDocType').value };
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'read_document_content', arguments: args }, 'cc');
+    const args = {
+      documentId: document.getElementById('input-readDocId').value,
+      source: document.getElementById('input-readSource').value
+    };
+    const dt = document.getElementById('input-readDocType').value;
+    if (dt) args.documentType = dt;
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'read_document', arguments: args });
     showResult('result-read', data, renderContent);
   } catch (err) { showResult('result-read', { error: { message: err.message } }); }
   setLoading('btn-read', false);
 }
 
-async function callUploadDoc() {
+async function callUpload() {
   const fileInput = document.getElementById('input-uploadFile');
   const file = fileInput.files[0];
   if (!file) { alert('Please select a file first.'); return; }
@@ -453,11 +463,17 @@ async function callUploadDoc() {
     if (!uploadData.fileId) throw new Error('No fileId returned from temp store');
 
     const ext = file.name.includes('.') ? '.' + file.name.split('.').pop() : file.type;
-    const args = { fileName: file.name, fileType: ext, fileSizeBytes: file.size, fileId: uploadData.fileId };
+    const args = {
+      source: document.getElementById('input-uploadSource').value,
+      fileName: file.name,
+      fileType: ext,
+      fileSizeBytes: file.size,
+      fileId: uploadData.fileId
+    };
     const title = document.getElementById('input-uploadTitle').value;
     if (title) args.title = title;
 
-    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'upload_health_document', arguments: args }, 'cc');
+    const data = await mcpRequest(CC_URL, 'tools/call', { name: 'upload_document', arguments: args });
     showResult('result-upload', data);
   } catch (err) {
     showResult('result-upload', { error: { message: err.message } });
@@ -466,38 +482,11 @@ async function callUploadDoc() {
   btn.textContent = 'Upload & Run Tool';
 }
 
-// ── Messaging tool callers ──
-
-async function callMsgSearch() {
-  setLoading('btn-msg-search', true);
-  try {
-    const args = {};
-    const tid = document.getElementById('input-msgThreadId').value;
-    const lim = document.getElementById('input-msgLimit').value;
-    if (tid) args.threadId = tid;
-    if (lim) args.limit = parseInt(lim);
-    const data = await mcpRequest(MSG_URL, 'tools/call', { name: 'search_conversation_attachments', arguments: args }, 'msg');
-    showResult('result-msg-search', data, renderAttachments);
-  } catch (err) { showResult('result-msg-search', { error: { message: err.message } }); }
-  setLoading('btn-msg-search', false);
-}
-
-async function callMsgLink() {
-  setLoading('btn-msg-link', true);
-  try {
-    const args = { documentId: document.getElementById('input-msgDocId').value };
-    const data = await mcpRequest(MSG_URL, 'tools/call', { name: 'get_attachment_link', arguments: args }, 'msg');
-    showResult('result-msg-link', data, renderMsgLink);
-  } catch (err) { showResult('result-msg-link', { error: { message: err.message } }); }
-  setLoading('btn-msg-link', false);
-}
-
 // Store original button labels
 document.querySelectorAll('.btn').forEach(b => { b.dataset.label = b.textContent; });
 
-// Initialize both servers
-initServer(CC_URL, 'cc', 'status-cc');
-initServer(MSG_URL, 'msg', 'status-msg');
+// Initialize
+initServer();
 </script>
 </body>
 </html>

@@ -1,3 +1,5 @@
 demo-mock-server/demo-mock-server
+chat-ui/chat-ui-server
+mcp-test-ui/mcp-test-ui
 *.exe
 .DS_Store
