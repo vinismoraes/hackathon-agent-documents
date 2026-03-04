@@ -1350,14 +1350,6 @@ function addChips(chips) {
     el.className = 'chip';
     const label = chip.label || chip.value || '?';
     el.textContent = label;
-
-    const color = getCategoryColor(label);
-    if (color) {
-      el.style.background = color.bg;
-      el.style.color = color.fg;
-      el.style.borderColor = color.border;
-    }
-
     el.onclick = () => { msgInput.value = label; send(); };
     container.appendChild(el);
   }
