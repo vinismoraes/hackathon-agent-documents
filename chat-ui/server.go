@@ -23,7 +23,6 @@ import (
 var content embed.FS
 
 const aorTarget = "http://localhost:8080"
-const mockTarget = "http://localhost:8092"
 const adminTarget = "http://localhost:18007"
 
 func buildJWT() string {
@@ -91,17 +90,16 @@ func main() {
 		io.Copy(w, resp.Body)
 	})
 
-	// Proxy document downloads to the mock server
+	// Proxy document downloads to the MCP admin API
 	mux.HandleFunc("/doc-content/", func(w http.ResponseWriter, r *http.Request) {
 		docID := r.URL.Path[len("/doc-content/"):]
 		if docID == "" {
 			http.Error(w, "missing document ID", 400)
 			return
 		}
-		url := mockTarget + "/v1/documents/content?documentId=" + docID + "&documentType=document"
-		resp, err := http.Get(url)
+		resp, err := http.Get(adminTarget + "/doc-content/" + docID)
 		if err != nil {
-			http.Error(w, "mock server unreachable", 502)
+			http.Error(w, "admin API unreachable", 502)
 			return
 		}
 		defer resp.Body.Close()

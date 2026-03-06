@@ -51,7 +51,15 @@ echo "[OK] Documents MCP server on :18006 + Admin API on :18007"
 
 # ── 2. AOR containers ──
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q agent-orchestrator-agent-orchestrator; then
-  echo "[OK] AOR containers already running"
+  echo "[..] Restarting AOR to clear tool cache..."
+  (cd "$AOR_DIR" && docker compose restart agent-orchestrator 2>&1 | tail -3)
+  echo "[..] Waiting for AOR health check..."
+  for i in $(seq 1 30); do
+    if curl -s http://localhost:8080/healthz 2>/dev/null | grep -q ok; then
+      break
+    fi
+    sleep 2
+  done
 else
   echo "[..] Starting AOR containers..."
   cp ~/.config/gcloud/application_default_credentials.json /tmp/gcloud_adc.json 2>/dev/null || true

@@ -1,0 +1,49 @@
+BLOOD WORK RESULTS
+===================
+Patient: Jane Doe
+Member ID: HM-12345678
+Date of Service: February 28, 2026
+Ordering Provider: Dr. Sarah Smith, Family Medicine
+Lab: Quest Diagnostics - Lakewood Center
+
+COMPLETE BLOOD COUNT (CBC)
+--------------------------
+Test                    Result      Reference Range     Flag
+White Blood Cells       6.8         4.0 - 11.0 K/uL
+Red Blood Cells         4.52        3.80 - 5.10 M/uL
+Hemoglobin              13.8        11.5 - 15.5 g/dL
+Hematocrit              41.2        34.0 - 46.0 %
+Platelets               245         150 - 400 K/uL
+
+COMPREHENSIVE METABOLIC PANEL
+------------------------------
+Test                    Result      Reference Range     Flag
+Glucose (fasting)       98          70 - 100 mg/dL
+BUN                     15          7 - 25 mg/dL
+Creatinine              0.9         0.6 - 1.2 mg/dL
+Sodium                  140         136 - 145 mEq/L
+Potassium               4.2         3.5 - 5.1 mEq/L
+Calcium                 9.5         8.6 - 10.3 mg/dL
+Total Protein           7.1         6.0 - 8.3 g/dL
+Albumin                 4.3         3.5 - 5.0 g/dL
+Bilirubin, Total        0.8         0.1 - 1.2 mg/dL
+ALT                     22          7 - 56 U/L
+AST                     25          10 - 40 U/L
+
+LIPID PANEL
+-----------
+Test                    Result      Reference Range     Flag
+Total Cholesterol       195         < 200 mg/dL
+LDL Cholesterol         118         < 130 mg/dL
+HDL Cholesterol         58          > 40 mg/dL
+Triglycerides           96          < 150 mg/dL
+
+HEMOGLOBIN A1C
+--------------
+Test                    Result      Reference Range     Flag
+HbA1c                   5.4%        < 5.7%
+
+SUMMARY
+-------
+All results within normal limits. No follow-up required.
+Next recommended blood work: August 2026 (6-month follow-up).

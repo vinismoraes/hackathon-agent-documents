@@ -61,7 +61,7 @@ set_sources() {
 
 echo -e "${BOLD}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Toggle Progression Test — Document Gateway Scalability"
+echo "  Toggle Progression Test — Document Concierge Scalability"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "${RESET}"
 
